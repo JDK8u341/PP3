@@ -23,7 +23,7 @@ class MemHandler:
         self.place = place
         self.h_type = h_type
 
-class InPlaceMemHandler:
+class IndirectMemHandler:
     # 间接寻址指令：从当前 view 出发，按 depth 找到目标地址
     TYPE = HandlerType.InPlaceMem
     def __init__(self,h_type,depth):
@@ -89,7 +89,7 @@ class Runtime:
                     place = self.memory[place]
                 self.mem_handler_map[h.h_type](place)
             elif h.TYPE == HandlerType.InPlace:
-                self.view = h.handle(self)
+                h.handle(self)
             else:
                 while self.view != 0:
                     self.run(h.body)
@@ -114,15 +114,15 @@ def Swap(place):
 
 def IndirectGet(depth):
     # 生成间接读取指令：沿 memory 链找到地址后读取
-    return InPlaceMemHandler(MemHandlerType.Get,depth)
+    return IndirectMemHandler(MemHandlerType.Get, depth)
 
 def IndirectSet(depth):
     # 生成间接写入指令：沿 memory 链找到地址后写入
-    return InPlaceMemHandler(MemHandlerType.Set,depth)
+    return IndirectMemHandler(MemHandlerType.Set, depth)
 
 def IndirectSwap(depth):
     # 生成间接交换指令：沿 memory 链找到地址后交换
-    return InPlaceMemHandler(MemHandlerType.Swap,depth)
+    return IndirectMemHandler(MemHandlerType.Swap, depth)
 
 class Print(InPlaceHandler):
     # 打印 view，并保持 view 不变
@@ -130,29 +130,41 @@ class Print(InPlaceHandler):
         print(runtime.view)
         return runtime.view
 
+
 class Input(InPlaceHandler):
     # 从标准输入读取整数作为新的 view
     def handle(self, runtime):
         return int(input())
 
+
 class Data(InPlaceHandler):
     # 立即数指令：把固定值写入 view
-    def __init__(self,data):
+    def __init__(self, data):
         super().__init__()
         self.data = data
 
     def handle(self, runtime):
-        return self.data
+        runtime.view = self.data
+
 
 class AddSelf(InPlaceHandler):
     # view 自增 1
     def handle(self, runtime):
-        return runtime.view + 1
+        runtime.view += 1
+
 
 class SubSelf(InPlaceHandler):
     # view 自减 1
     def handle(self, runtime):
-        return runtime.view - 1
+        runtime.view -= 1
+
+
+class Debug(InPlaceHandler):
+    def handle(self, runtime):
+        runtime.memory["_debug_idx"] += 1
+        print(f"# Debug {runtime.memory['_debug_idx']}\nView: {runtime.view}\n Memory: {runtime.memory}")
+
+std_register = {'print': Print, '-': SubSelf, '+': AddSelf, 'input': Input, 'debug': Debug}
 
 class IRBuilder:
     def __init__(self,op_map=None):

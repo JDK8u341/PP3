@@ -1,7 +1,6 @@
 from src.pp3 import *
 
-
-builder = IRBuilder(op_map={'print':Print,'-':SubSelf,'+':AddSelf,'input':Input})
+builder = IRBuilder(op_map=std_register)
 code = "@input $5 #5 @- $5 &0 $1 &1 $2 #2 @print #5 [ $4 #1 $3 #2 $0 [ #3 @+ $3 #0 @- $0 ] #3 @print #2 $1 #3 $2 #4 @- $5 ]"
 ir = builder.build(code)
 rt = Runtime(can_direct_addressing=True)

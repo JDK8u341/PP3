@@ -1,5 +1,6 @@
 from src.pp3 import *
-builder = IRBuilder(op_map={'print':Print,'-':SubSelf,'+':AddSelf,'input':Input})
+
+builder = IRBuilder(op_map=std_register)
 code = "&5 ^2 &6 ^3"
 ir = builder.build(code)
 rt = Runtime(can_direct_addressing=False)

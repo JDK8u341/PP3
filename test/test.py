@@ -2,7 +2,7 @@ from src.pp3 import *
 
 rt = Runtime(can_direct_addressing=True)
 
-irb = IRBuilder({'print':Print,'-':SubSelf,'+':AddSelf,'input':Input})
+irb = IRBuilder(std_register)
 ir_ss = irb.build(r'&5 %0 @print #0 @print')
 print(ir_ss)
 rt.clear()
