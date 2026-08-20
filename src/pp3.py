@@ -134,7 +134,7 @@ class Print(InPlaceHandler):
 class Input(InPlaceHandler):
     # 从标准输入读取整数作为新的 view
     def handle(self, runtime):
-        return int(input())
+        runtime.view = int(input())
 
 
 class Data(InPlaceHandler):
