@@ -1,13 +1,8 @@
-from abc import ABC, abstractmethod
 from enum import Enum, auto
 from collections import defaultdict
 
-class HandlerType(Enum):
-    # 运行时支持的几类指令节点
-    Mem = auto()
-    InPlaceMem = auto()
-    InPlace = auto()
-    Loop = auto()
+from .handlers import HandlerType, InPlaceHandler
+from .char_io import InputAsChar, PrintAsChar, register as char_register
 
 class MemHandlerType(Enum):
     # 内存访问的三种基本操作
@@ -33,16 +28,6 @@ class IndirectMemHandler:
         self.h_type = h_type
 
 
-class InPlaceHandler(ABC):
-    # 原地操作指令：读取 runtime，返回新的 view
-    TYPE = HandlerType.InPlace
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def handle(self,runtime):
-        raise NotImplementedError("Must implement this method")
-
 class LoopBlock:
     # 循环块：当 view 不为 0 时重复执行 body
     TYPE = HandlerType.Loop
@@ -56,6 +41,9 @@ class Runtime:
         # memory 默认值为 0，view 是当前工作值
         self.memory = defaultdict(int)
         self.view = 0
+        # 注册表保存类型；状态属于各运行器自己的标准操作实例
+        self.std_register = {name: operation() for name, operation in std_register.items()}
+        self._std_handlers = {type(operation): operation for operation in self.std_register.values()}
         self.mem_handler_map = {
             MemHandlerType.Get:self.get,
             MemHandlerType.Set:self.set,
@@ -89,7 +77,8 @@ class Runtime:
                     place = self.memory[place]
                 self.mem_handler_map[h.h_type](place)
             elif h.TYPE == HandlerType.InPlace:
-                h.handle(self)
+                # 同一标准操作的不同 IR 节点共用本运行器的实例
+                self._std_handlers.get(type(h), h).handle(self)
             else:
                 while self.view != 0:
                     self.run(h.body)
@@ -98,6 +87,7 @@ class Runtime:
     def clear(self):
         self.view = 0
         self.memory = defaultdict(int)
+        self.std_register['input_as_char'].clear()
 
 
 def Get(place):
@@ -128,7 +118,6 @@ class Print(InPlaceHandler):
     # 打印 view，并保持 view 不变
     def handle(self, runtime):
         print(runtime.view)
-        return runtime.view
 
 
 class Input(InPlaceHandler):
@@ -164,7 +153,10 @@ class Debug(InPlaceHandler):
         runtime.memory["_debug_idx"] += 1
         print(f"# Debug {runtime.memory['_debug_idx']}\nView: {runtime.view}\n Memory: {runtime.memory}")
 
-std_register = {'print': Print, '-': SubSelf, '+': AddSelf, 'input': Input, 'debug': Debug}
+std_register = {
+    'print': Print, '-': SubSelf, '+': AddSelf, 'input': Input, 'debug': Debug,
+    **char_register,
+}
 
 class IRBuilder:
     def __init__(self,op_map=None):
@@ -244,10 +236,16 @@ class IRBuilder:
         irs = []
         # 字符串代码按空格分词；也支持直接传入 token 列表
         codes = code.split() if isinstance(code,str) else code
+        # 列表代表已完成分词的结果，尽早报告空项或夹带空白的 token
+        for position, token in enumerate(codes):
+            if not isinstance(token, str):
+                raise TypeError(f"位置 {position} 的 token 必须是字符串")
+            if not token or any(ch.isspace() for ch in token):
+                raise ValueError(f"位置 {position} 必须是非空且不含空白的完整 token")
         pairs = self.match_brackets(codes)
         while idx < len(codes):
             raw = codes[idx]
-            h = raw.strip()
+            h = raw
             if h[0] != '[':
                 d = self.handle_map[h[0]](h)
             else:
