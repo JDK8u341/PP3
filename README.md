@@ -3,7 +3,7 @@
 PP3 是一个用 Python 实现的极简指令语言运行时。项目核心文件是 `src/pp3.py`，它提供：
 
 - 一个基于 `view` 和 `memory` 的运行时 `Runtime`
-- 一组基础指令 handler，例如读写内存、交换内存、输入输出、加一减一
+- 一组基础指令 handler，例如读写内存、交换内存、字符输入输出、加一减一
 - 一个 `IRBuilder`，用于把文本形式的 PP3 指令编译成可执行 IR
 - 两种内存访问方式：直接寻址和间接寻址
 
@@ -83,6 +83,8 @@ rt.run(ir)
 
 - `Print`：打印当前 `view`，并保持 `view` 不变。
 - `Input`：读取用户输入并转成整数。
+- `PrintAsChar`：输出 `view % 256` 对应的单个字符，不追加换行。
+- `InputAsChar`：从按行读取的字符缓冲中取出一个字符，并把其 `ord()` 写入 `view`。
 - `AddSelf`：让 `view + 1`。
 - `SubSelf`：让 `view - 1`。
 
@@ -141,6 +143,34 @@ rt.run(ir)
 ```text
 ValueError: Your Config Not Allow Direct Addressing!
 ```
+
+### 字符输入输出
+
+标准注册表 `std_register` 包含两个字符操作：
+
+```python
+builder = IRBuilder(op_map=std_register)
+```
+
+`@print_as_char` 输出当前 `view` 对 256 取模后的字符，不输出额外换行，也不修改 `view`：
+
+```text
+&65 @print_as_char
+```
+
+上面的代码输出 `A`。负数也按 Python 的取模规则处理，例如 `-1` 输出码点 `255` 对应的字符。
+
+`@input_as_char` 每次取出一个字符，并把字符的 `ord()` 写入 `view`。由于 Python 的 `input()` 一次读取一整行，字符缓冲由 `InputAsChar` 操作实例独立维护；一行耗尽后才读取下一行，并把被 `input()` 去掉的换行补回缓冲。因此输入 `ABC` 后，在同一个 Runtime 中连续读取四次得到：
+
+```text
+65, 66, 67, 10
+```
+
+空行也会产生一个换行字符。输入到达 EOF 时抛出 `EOFError`。整数操作 `@input` 使用独立的 `input()` 调用，不会消费字符缓冲。
+
+字符 I/O 实现在独立模块 `src/char_io.py`，该模块的注册表在加载时并入 `std_register`。全局注册表保存操作类型，每个 Runtime 都通过它创建自己的标准操作实例，可通过 `rt.std_register` 查看。同一个 Runtime 中的多个字符输入指令、循环和多次 `run()` 共用该 Runtime 的输入实例；不同 Runtime 的缓冲互不影响，即使它们执行同一份 IR。
+
+`Runtime.clear()` 会清空该 Runtime 的字符缓冲；缓冲不占用 DSL 的 `memory` 地址。整数输入行为保持不变。字符输入直接保存 Unicode 码点，因此中文输入的 `view` 可以大于 255；只有字符输出取模，非字节范围的输入不会原样回显。
 
 ### 间接寻址
 
@@ -236,7 +266,7 @@ rt.clear()
 ```
 
 - `run(handles)`：执行由 `IRBuilder.build()` 生成的 IR，或手动构造的 handler 列表。
-- `clear()`：清空内存并把 `view` 重置为 `0`。
+- `clear()`：清空内存和本 Runtime 的字符输入缓冲，并把 `view` 重置为 `0`。
 
 ### IRBuilder
 
@@ -260,6 +290,8 @@ ir = builder.build("&5 @print")
 ir = builder.build(["&5", "@print"])
 ```
 
+字符串会先按空白分词；列表则必须提供已经分好的严格 token，不能包含空项或带空白的项。例如 `[' [ ', '&0', ' ] ']` 会抛出 `ValueError`，不会再次分词。
+
 ### 自定义操作
 
 自定义操作需要继承 `InPlaceHandler` 并实现 `handle(self, runtime)`。
@@ -269,7 +301,7 @@ from src.pp3 import *
 
 class Double(InPlaceHandler):
     def handle(self, runtime):
-        return runtime.view * 2
+        runtime.view *= 2
 
 builder = IRBuilder({
     "print": Print,
@@ -289,7 +321,7 @@ rt.run(ir)
 12
 ```
 
-`handle()` 的返回值会成为新的 `runtime.view`。
+`handle()` 的返回值会被忽略。自定义操作需要直接修改 `runtime.view`；如果操作还需要保存状态，应将状态放在操作实例自身，或明确放入 `runtime.memory`。
 
 ### 手动构造 IR
 
@@ -321,6 +353,8 @@ rt.run(handles)
 | --- | --- | --- |
 | `&n` | `Data(n)` | 设置 `view = n` |
 | `@name` | 自定义 `InPlaceHandler` | 执行注册操作 |
+| `@input_as_char` | `InputAsChar` | 读取一个字符，将 `ord()` 写入 `view` |
+| `@print_as_char` | `PrintAsChar` | 输出 `view % 256` 对应的字符 |
 | `#n` | `Get(n)` | 直接读取 `memory[n]` |
 | `$n` | `Set(n)` | 直接写入 `memory[n]` |
 | `%n` | `Swap(n)` | 直接交换 `view` 和 `memory[n]` |
@@ -363,6 +397,39 @@ ir = builder.build(code)
 rt = Runtime(can_direct_addressing=False)
 rt.run(ir)
 ```
+
+## cup 扩展
+
+`src/cup.py` 提供可选的双端栈和二元运算。注册时将其与标准操作合并，并在使用前执行 `@init_cup`：
+
+```python
+from src import cup, pp3
+
+builder = pp3.IRBuilder(op_map={**pp3.std_register, **cup.register})
+rt = pp3.Runtime()
+rt.run(builder.build("@init_cup &-5 @push &2 @push @div @print"))
+```
+
+输出 `-2`。二元运算把栈顶作为右操作数、次栈顶作为左操作数，结果写入 `view`，不会自动压回栈。
+
+- `@push`、`@pop`：在右端压入当前 `view`、弹出到 `view`。
+- `@push_left`、`@pop_left`：在左端压入当前 `view`、弹出到 `view`。
+- `@add`、`@sub`、`@mul`：整数加、减、乘。
+- `@div`：整数除法，按 C++ 规则向零截断；例如 `-5 / 2` 得到 `-2`，`5 / -2` 也得到 `-2`。计算不经过浮点数，大整数不会因浮点转换丢失精度。
+
+操作数不足时抛出 `IndexError`，除数为零时抛出 `ZeroDivisionError`。二元运算失败会保留原栈及 `view`；成功后才移除两个操作数。栈仍保存在各 Runtime 的 `memory['_cup']` 中，`clear()` 会将其一并清除，之后需要重新初始化。
+
+## 自动测试
+
+在仓库根目录运行：
+
+```text
+python -B -m unittest discover -v
+```
+
+`tests/` 中的测试全部使用 Python 标准库，不需要安装第三方依赖。测试覆盖寻址、循环、解析、标准输入输出、字符缓冲的复用与隔离，以及 cup 的双端操作、整数除法和异常状态保持。
+
+`test/` 保留原有交互示例，不作为自动测试收集。GitHub Actions 会在 PR 和主分支提交上运行 Python 3.10、3.12、3.14 的自动测试。
 
 ## 注意事项
 
