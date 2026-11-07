@@ -7,6 +7,10 @@ PP3 是一个用 Python 实现的极简指令语言运行时。项目核心文�
 - 一个 `IRBuilder`，用于把文本形式的 PP3 指令编译成可执行 IR
 - 两种内存访问方式：直接寻址和间接寻址
 
+`Runtime` 现在默认使用热点循环专用执行器：保留原 IR、任意精度整数和 `defaultdict(int)`，在运行中把已验证的纯计算热点编译为专用 Python 字节码函数，短程序和动态扩展继续解释执行。无需额外安装原生编译器。
+
+旧实现保留为 `ReferenceRuntime`，用于回归对照和诊断，不建议作为日常默认执行器。路线比较、兼容性证明和冷/热测量见[执行器设计](docs/executor.md)与[基准报告](benchmarks/README.md)。
+
 ## 获取项目
 
 请自行 clone 本仓库，然后进入项目目录即可使用。
@@ -252,6 +256,7 @@ rt = Runtime(can_direct_addressing=False)
 参数：
 
 - `can_direct_addressing`：是否允许直接寻址。默认是 `False`。
+- `engine`：新增的可选关键字参数。默认 `"auto"` 按热点选择编译；`"reference"` 强制参考路径；`"specialized"` 尝试立即编译可支持循环，仅建议用于诊断或已知热点，短程序可能因编译和检查变慢。
 
 常用属性：
 
@@ -267,6 +272,16 @@ rt.clear()
 
 - `run(handles)`：执行由 `IRBuilder.build()` 生成的 IR，或手动构造的 handler 列表。
 - `clear()`：清空内存和本 Runtime 的字符输入缓冲，并把 `view` 重置为 `0`。
+
+原有调用、手工 handler 列表和 `IRBuilder.build()` 返回的列表接口不变。新增 `rt.execution_stats` 返回编译次数、命中、回退和编译秒数的副本；这些统计不占用 DSL 内存。`clear()` 保持原来的作用，不清空累计统计或全局有界代码缓存。
+
+```python
+rt = Runtime()                       # 推荐：自动执行器
+rt = Runtime(engine="reference")     # 诊断时强制原路径
+reference = ReferenceRuntime()        # 独立原版语义对照
+```
+
+自定义 handler、I/O、debug 和 cup 始终通过原 handler 接口执行；修改标准操作或内存分派、替换内存对象、继承 Runtime 时，不能证明安全的区域回退。IR 修改会在再次进入编译循环前核对，缓存不持有 Runtime 或字符缓冲。
 
 ### IRBuilder
 
@@ -427,9 +442,9 @@ rt.run(builder.build("@init_cup &-5 @push &2 @push @div @print"))
 python -B -m unittest discover -v
 ```
 
-`tests/` 中的测试全部使用 Python 标准库，不需要安装第三方依赖。测试覆盖寻址、循环、解析、标准输入输出、字符缓冲的复用与隔离，以及 cup 的双端操作、整数除法和异常状态保持。
+`tests/` 中的测试全部使用 Python 标准库，不需要安装第三方依赖。除原有测试外，还逐项比较参考路径与高速路径的 view、内存键值及插入顺序、输出、异常及字符缓冲；归档 20 个题库/研究程序作为离线样例，测试 IR 修改、扩展回调、缓存生命周期和编译失败回退。
 
-`test/` 保留原有交互示例，不作为自动测试收集。GitHub Actions 会在 PR 和主分支提交上运行 Python 3.10、3.12、3.14 的自动测试。
+`test/` 保留原有交互示例，不作为自动测试收集。GitHub Actions 会在 PR 和主分支提交上，分别于 Linux、Windows 运行 Python 3.10、3.12、3.14 的自动测试。
 
 ## 注意事项
 

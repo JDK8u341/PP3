@@ -1,0 +1,617 @@
+[
+  {
+    "name": "P001",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P001.pp3",
+    "sha256": "434b71de24fad820e75fe1607f51c3fc27c7d15712f009b45a176b1cbfc28a81",
+    "cases": [
+      {
+        "name": "两个零",
+        "stdin": "0\n0\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "正数相加",
+        "stdin": "5\n7\n",
+        "stdout": "12\n"
+      },
+      {
+        "name": "异号相消",
+        "stdin": "-42\n42\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "两个负数",
+        "stdin": "-123\n-456\n",
+        "stdout": "-579\n"
+      },
+      {
+        "name": "负数和零",
+        "stdin": "-1\n0\n",
+        "stdout": "-1\n"
+      },
+      {
+        "name": "保留地址碰撞",
+        "stdin": "-10\n-11\n",
+        "stdout": "-21\n"
+      },
+      {
+        "name": "负侧搜索边界",
+        "stdin": "-12\n1\n",
+        "stdout": "-11\n"
+      },
+      {
+        "name": "正负幅值不等",
+        "stdin": "42\n-100\n",
+        "stdout": "-58\n"
+      }
+    ]
+  },
+  {
+    "name": "P002",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P002.pp3",
+    "sha256": "9aac396d25e8f4935e4311e5d8b5ecdaa6d31478184ae98d95085e8550198a77",
+    "cases": [
+      {
+        "name": "零项",
+        "stdin": "0\n",
+        "stdout": ""
+      },
+      {
+        "name": "一项",
+        "stdin": "1\n",
+        "stdout": "1\n"
+      },
+      {
+        "name": "两项",
+        "stdin": "2\n",
+        "stdout": "1\n1\n"
+      },
+      {
+        "name": "十项",
+        "stdin": "10\n",
+        "stdout": "1\n1\n2\n3\n5\n8\n13\n21\n34\n55\n"
+      }
+    ]
+  },
+  {
+    "name": "P003",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P003.pp3",
+    "sha256": "0cca0491344eb170fe5217e3e3ceeaebff266178672935ab34c44058b65bf06d",
+    "cases": [
+      {
+        "name": "零",
+        "stdin": "0\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "负零",
+        "stdin": "-0\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "正号与前导零",
+        "stdin": "+0012\n",
+        "stdout": "12\n"
+      },
+      {
+        "name": "负号与前导零",
+        "stdin": "-0012\n",
+        "stdout": "-12\n"
+      },
+      {
+        "name": "五位整数",
+        "stdin": "12345\n",
+        "stdout": "12345\n"
+      },
+      {
+        "name": "末行无 LF",
+        "stdin": "-1234",
+        "stdout": "-1234\n"
+      },
+      {
+        "name": "空行",
+        "stdin": "\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "只有符号",
+        "stdin": "+\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "空格不合法",
+        "stdin": " 12\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "中间空格不合法",
+        "stdin": "1 2\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "非 ASCII 数字不合法",
+        "stdin": "１２\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "只处理首行",
+        "stdin": "12\n34\n",
+        "stdout": "12\n"
+      }
+    ]
+  },
+  {
+    "name": "P004",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P004.pp3",
+    "sha256": "bcefc3cd8817154af5483e8cf0212a6a11dd3b98d6a311916e08e213d22dac18",
+    "cases": [
+      {
+        "name": "零乘负数",
+        "stdin": "0\n-7\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "正正",
+        "stdin": "7\n8\n",
+        "stdout": "56\n"
+      },
+      {
+        "name": "负正",
+        "stdin": "-7\n8\n",
+        "stdout": "-56\n"
+      },
+      {
+        "name": "正负",
+        "stdin": "7\n-8\n",
+        "stdout": "-56\n"
+      },
+      {
+        "name": "负负",
+        "stdin": "-7\n-8\n",
+        "stdout": "56\n"
+      },
+      {
+        "name": "保留地址碰撞",
+        "stdin": "-17\n16\n",
+        "stdout": "-272\n"
+      },
+      {
+        "name": "较大幅值",
+        "stdin": "-64\n63\n",
+        "stdout": "-4032\n"
+      }
+    ]
+  },
+  {
+    "name": "P005",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P005.pp3",
+    "sha256": "72d9753cf700ba9cc02a85d4c385ebfaabc3826e5672aa370e2c17f28bcc88f3",
+    "cases": [
+      {
+        "name": "两个零",
+        "stdin": "0\n0\n",
+        "stdout": "0\n"
+      },
+      {
+        "name": "第一数为零",
+        "stdin": "0\n-12\n",
+        "stdout": "12\n"
+      },
+      {
+        "name": "第二数为零",
+        "stdin": "-12\n0\n",
+        "stdout": "12\n"
+      },
+      {
+        "name": "相等负数",
+        "stdin": "-12\n-12\n",
+        "stdout": "12\n"
+      },
+      {
+        "name": "互质异号",
+        "stdin": "-35\n64\n",
+        "stdout": "1\n"
+      },
+      {
+        "name": "非互质",
+        "stdin": "-84\n126\n",
+        "stdout": "42\n"
+      },
+      {
+        "name": "相邻边界",
+        "stdin": "63\n64\n",
+        "stdout": "1\n"
+      }
+    ]
+  },
+  {
+    "name": "P006",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P006.pp3",
+    "sha256": "5cb3cb27ea1fc34d71f5efd4549fcdbe5b62e303fa5cd43d90ccf473fb8ea7bb",
+    "cases": [
+      {
+        "name": "空帧",
+        "stdin": "0\n",
+        "stdout": ""
+      },
+      {
+        "name": "问候文本不补 LF",
+        "stdin": "13\nHello, World!",
+        "stdout": "Uryyb, Jbeyq!"
+      },
+      {
+        "name": "大小写边界",
+        "stdin": "6\nANZanz",
+        "stdout": "NAMnam"
+      },
+      {
+        "name": "跨行帧",
+        "stdin": "4\na\nB\n",
+        "stdout": "n\nO\n"
+      },
+      {
+        "name": "NUL 与最大字节",
+        "stdin": "2\n\u0000ÿ",
+        "stdout": "\u0000ÿ"
+      },
+      {
+        "name": "补回 LF 计入帧",
+        "stdin": "3\nAB",
+        "stdout": "NO\n"
+      },
+      {
+        "name": "负长度",
+        "stdin": "-3\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "末尾非法无部分输出",
+        "stdin": "3\nAB中",
+        "stdout": "ERROR\n"
+      }
+    ]
+  },
+  {
+    "name": "P007",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P007.pp3",
+    "sha256": "3ce960d68fb9868c081f6c118707e880c9c69ff13d3608374414976b98ae5bc1",
+    "cases": [
+      {
+        "name": "空帧",
+        "stdin": "0\n",
+        "stdout": ""
+      },
+      {
+        "name": "逆序",
+        "stdin": "3\ncba",
+        "stdout": "abc"
+      },
+      {
+        "name": "重复与 NUL",
+        "stdin": "5\nb\u0000aÿb",
+        "stdout": "\u0000abbÿ"
+      },
+      {
+        "name": "LF 按码点排序",
+        "stdin": "3\nb\na",
+        "stdout": "\nab"
+      },
+      {
+        "name": "重复值",
+        "stdin": "4\nAAAA",
+        "stdout": "AAAA"
+      },
+      {
+        "name": "补回 LF",
+        "stdin": "3\nAB",
+        "stdout": "\nAB"
+      },
+      {
+        "name": "负长度",
+        "stdin": "-1\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "非法字符",
+        "stdin": "3\nA中B",
+        "stdout": "ERROR\n"
+      }
+    ]
+  },
+  {
+    "name": "P008",
+    "project": "challenges",
+    "revision": "c5c4d638101fbbfc8abe12f81cbac2ef94a25b3d",
+    "file": "P008.pp3",
+    "sha256": "51279f7edbd1dfbccd0526b4ca37a9cc7a8d6aacddfb390c5a0edb62a2a7dab1",
+    "cases": [
+      {
+        "name": "空帧",
+        "stdin": "0\n",
+        "stdout": "0 0 0\n"
+      },
+      {
+        "name": "无结尾换行",
+        "stdin": "11\nhello world",
+        "stdout": "0 2 11\n"
+      },
+      {
+        "name": "跨行与词边界",
+        "stdin": "6\na b\nc\n",
+        "stdout": "2 3 6\n"
+      },
+      {
+        "name": "ASCII 空白",
+        "stdin": "7\n\t\n\u000b\f\r \t",
+        "stdout": "1 0 7\n"
+      },
+      {
+        "name": "NBSP 不是本题空白",
+        "stdin": "3\na b",
+        "stdout": "0 1 3\n"
+      },
+      {
+        "name": "NUL 与 255",
+        "stdin": "2\n\u0000ÿ",
+        "stdout": "0 1 2\n"
+      },
+      {
+        "name": "负长度",
+        "stdin": "-2\n",
+        "stdout": "ERROR\n"
+      },
+      {
+        "name": "非法帧",
+        "stdin": "3\nA中B",
+        "stdout": "ERROR\n"
+      }
+    ]
+  },
+  {
+    "name": "graph-write",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "graph-write.pp3",
+    "sha256": "074ca369fd4e0ca9651d07383b62d6227ee9aa8ba4baaeefd472d8e9e98b77aa",
+    "cases": [
+      {
+        "name": "已标记地址和零载荷",
+        "stdin": "0\n0\n",
+        "stdout": "0\n1\n"
+      },
+      {
+        "name": "数据值碰到集合键地址",
+        "stdin": "6\n7\n",
+        "stdout": "7\n1\n"
+      }
+    ]
+  },
+  {
+    "name": "equality",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "equality.pp3",
+    "sha256": "45cb59bcc0553750dcf028f18c8a8942d6f9ed40dbefde79075c107e2cd8efd4",
+    "cases": [
+      {
+        "name": "相等零",
+        "stdin": "0\n0\n",
+        "stdout": "1\n"
+      },
+      {
+        "name": "相邻不等",
+        "stdin": "999999\n1000000\n",
+        "stdout": "0\n"
+      }
+    ]
+  },
+  {
+    "name": "sparse-set",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "sparse-set.pp3",
+    "sha256": "04547884bb67fe16023a12457defc35383bc97a3cb789dbbd0af27da66b2f12b",
+    "cases": [
+      {
+        "name": "稀疏成员查询",
+        "stdin": "3\n0\n256\n9999\n5\n0\n1\n256\n9999\n10000\n",
+        "stdout": "1\n0\n1\n1\n0\n"
+      }
+    ]
+  },
+  {
+    "name": "comparison",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "comparison.pp3",
+    "sha256": "07df8a72b141a922ebe70fe0211642d5abe2d8109e6ed9c7fe5f6c427446f9bd",
+    "cases": [
+      {
+        "name": "超过字节范围",
+        "stdin": "256\n300\n",
+        "stdout": "1\n0\n0\n"
+      },
+      {
+        "name": "相等",
+        "stdin": "12\n12\n",
+        "stdout": "0\n1\n0\n"
+      }
+    ]
+  },
+  {
+    "name": "signed-comparison",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "signed-comparison.pp3",
+    "sha256": "09db9c9c6e88f2d6331d7227d7258b6934e8d3d5a222a020a4990b01fb3d645f",
+    "cases": [
+      {
+        "name": "两个负数",
+        "stdin": "1\n5\n1\n2\n",
+        "stdout": "1\n0\n0\n"
+      },
+      {
+        "name": "负零规范化",
+        "stdin": "1\n0\n0\n0\n",
+        "stdout": "0\n1\n0\n"
+      }
+    ]
+  },
+  {
+    "name": "comparison-sort",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "comparison-sort.pp3",
+    "sha256": "f7d917f5b0e3d06631ba76906d70474e5c70e9cbe06e02d26e127dfd72e19e78",
+    "cases": [
+      {
+        "name": "通用比较排序",
+        "stdin": "6\n5000\n0\n256\n2\n5000\n1\n",
+        "stdout": "0\n1\n2\n256\n5000\n5000\n"
+      },
+      {
+        "name": "空序列",
+        "stdin": "0\n",
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "name": "binary-add",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "binary-add.pp3",
+    "sha256": "ad2b193723cb459fb8e3b2b97e2f98f9c58910024a6bc6e421a6a22d8ec2d751",
+    "cases": [
+      {
+        "name": "全长进位",
+        "stdin": "4\n1111\n0001\n",
+        "stdout": "10000\n"
+      },
+      {
+        "name": "固定宽度零",
+        "stdin": "4\n0000\n0000\n",
+        "stdout": "00000\n"
+      },
+      {
+        "name": "空位宽",
+        "stdin": "0\n\n\n",
+        "stdout": "0\n"
+      }
+    ]
+  },
+  {
+    "name": "value-chain",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "value-chain.pp3",
+    "sha256": "b61b7d7ee303ffc22655ba49ec176e32e29098dc84420267a5eb55c339b2e23b",
+    "cases": [
+      {
+        "name": "互异输入值作为节点地址",
+        "stdin": "5\n6\n7\n0\n",
+        "stdout": "5\n6\n7\n"
+      },
+      {
+        "name": "非保留负地址节点",
+        "stdin": "-2\n-3\n0\n",
+        "stdout": "-2\n-3\n"
+      },
+      {
+        "name": "空值链",
+        "stdin": "0\n",
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "name": "record-queue",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "record-queue.pp3",
+    "sha256": "146becf9d000166c92e34b044dc6022a93f2b70cd2f029e266966fd7a57ed2cd",
+    "cases": [
+      {
+        "name": "重复载荷、零与符号编码",
+        "stdin": "5\n0\n5\n0\n5\n0\n0\n1\n1\n1\n2\n",
+        "stdout": "5\n5\n0\n-1\n-2\n"
+      },
+      {
+        "name": "空队列",
+        "stdin": "0\n",
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "name": "record-stack",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "record-stack.pp3",
+    "sha256": "a73a58068dae9228f42a8264b707345b8c0ad053d79e4739530b696179145f82",
+    "cases": [
+      {
+        "name": "后进先出",
+        "stdin": "3\n0\n1\n0\n2\n0\n3\n",
+        "stdout": "3\n2\n1\n"
+      },
+      {
+        "name": "空栈",
+        "stdin": "0\n",
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "name": "record-splice",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "record-splice.pp3",
+    "sha256": "2f2b0f24b5a19bcf199c1cab4d2718822067c21c32214e86f005c73326283c70",
+    "cases": [
+      {
+        "name": "两链拼接及所有权转移",
+        "stdin": "2\n0\n5\n0\n5\n2\n0\n0\n1\n7\n",
+        "stdout": "5\n5\n0\n-7\n"
+      },
+      {
+        "name": "拼接两个空链",
+        "stdin": "0\n0\n",
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "name": "record-ring",
+    "project": "lab",
+    "revision": "3debbe3b5b580c2e4a86ab0f0c1d3ba050adfda6",
+    "file": "record-ring.pp3",
+    "sha256": "d1269a9edf4d803bd7735e59d03b4a047bf33314525caeaff2b7e837ae5ee11f",
+    "cases": [
+      {
+        "name": "有向环的定次数遍历",
+        "stdin": "3\n0\n5\n0\n5\n0\n0\n",
+        "stdout": "5\n5\n0\n"
+      },
+      {
+        "name": "空环",
+        "stdin": "0\n",
+        "stdout": ""
+      }
+    ]
+  }
+]
