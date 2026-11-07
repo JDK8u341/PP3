@@ -94,7 +94,7 @@ def compile_aot(handles, build_dir, *, runtime=None):
         setup = ("from setuptools import Extension, setup\nimport os, sys\n"
                  f"sys.path.insert(0, {str(source_dir)!r})\nfrom _toolchain import LLVMBuildExt\n"
                  f"setup(name={module_name!r}, cmdclass={{'build_ext': LLVMBuildExt}}, ext_modules=[Extension({module_name!r}, ['program.cpp'], "
-                 f"include_dirs=[{str(source_dir)!r}], language='c++', "
+                 f"include_dirs=[{str(source_dir)!r}, '.'], language='c++', "
                  "extra_compile_args=['/O2','/std:c++17','/EHsc','/utf-8'] if os.name=='nt' "
                  "else ['-O3','-std=c++17'])])\n")
         (output / "setup.py").write_text(setup, encoding="utf-8")
