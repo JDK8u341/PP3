@@ -1,0 +1,38 @@
+{
+  "scope": "惯用 C++ 题目算法；仅此固定有效输入，机器整数；不含 DSL 内存、逐字符 flush、启动和协议解码",
+  "repeat": 7,
+  "batch": 20000,
+  "compiler": "Clang/LLVM",
+  "flags": [
+    "/O2",
+    "/EHsc",
+    "/std:c++17",
+    "/utf-8"
+  ],
+  "workloads": [
+    {
+      "name": "P003",
+      "seconds_per_call": 4.7815e-08
+    },
+    {
+      "name": "P004",
+      "seconds_per_call": 8.38185e-07
+    },
+    {
+      "name": "P005",
+      "seconds_per_call": 8.26275e-07
+    },
+    {
+      "name": "P006",
+      "seconds_per_call": 1.8927e-07
+    },
+    {
+      "name": "P007",
+      "seconds_per_call": 6.9176e-07
+    },
+    {
+      "name": "P008",
+      "seconds_per_call": 2.839e-07
+    }
+  ]
+}

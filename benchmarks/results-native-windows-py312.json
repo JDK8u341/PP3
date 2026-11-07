@@ -1,0 +1,741 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "repeat": 7,
+  "native_compiler": "Clang 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)",
+  "timing": "perf_counter 中位数；冷启动包括 run 内编译，build 和 Runtime 初始化分列",
+  "workloads": [
+    {
+      "name": "短直线",
+      "tokens": 5,
+      "build_seconds": 3.470003139227629e-05,
+      "memory_cells": 1,
+      "output_characters": 0,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 1.3199984095990658e-05,
+      "engines": {
+        "reference": {
+          "cold_seconds": 4.400033503770828e-06,
+          "hot_seconds": 1.5999499591998756e-06,
+          "compile_seconds": 0,
+          "init_seconds": 2.8499984182417393e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 1.5400000847876072e-05,
+          "hot_seconds": 8.676499710418284e-07,
+          "compile_seconds": 1.3199984095990658e-05,
+          "init_seconds": 2.71000899374485e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.8440039331514528
+        },
+        "auto": {
+          "cold_seconds": 6.200047209858894e-06,
+          "hot_seconds": 2.847999974619597e-06,
+          "compile_seconds": 0.0,
+          "init_seconds": 3.330002073198557e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 0.5617801873097201
+        },
+        "specialized": {
+          "cold_seconds": 6.00004568696022e-06,
+          "hot_seconds": 2.4424499715678393e-06,
+          "compile_seconds": 0.0,
+          "init_seconds": 2.720009069889784e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 0.655059459896674
+        },
+        "native": {
+          "cold_seconds": 6.100046448409557e-06,
+          "hot_seconds": 2.168749982956797e-06,
+          "compile_seconds": 0.0,
+          "init_seconds": 3.330002073198557e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 0.7377290936129763
+        }
+      }
+    },
+    {
+      "name": "短循环",
+      "tokens": 4,
+      "build_seconds": 3.650004509836435e-05,
+      "memory_cells": 0,
+      "output_characters": 0,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 1.0299962013959885e-05,
+      "engines": {
+        "reference": {
+          "cold_seconds": 2.6999041438102722e-06,
+          "hot_seconds": 1.3841499458067119e-06,
+          "compile_seconds": 0,
+          "init_seconds": 2.9099988751113415e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 1.2199976481497288e-05,
+          "hot_seconds": 1.2099500163458287e-06,
+          "compile_seconds": 1.0299962013959885e-05,
+          "init_seconds": 2.9499991796910763e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.1439728311975932
+        },
+        "auto": {
+          "cold_seconds": 8.299946784973145e-06,
+          "hot_seconds": 3.896749985869974e-06,
+          "compile_seconds": 0.0,
+          "init_seconds": 3.5400036722421646e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 0.35520624900899095
+        },
+        "specialized": {
+          "cold_seconds": 0.0002253999700769782,
+          "hot_seconds": 4.734855005517602e-05,
+          "compile_seconds": 0.00014380004722625017,
+          "init_seconds": 2.8399983420968056e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 0,
+          "hot_speedup": 0.029233206596479513
+        },
+        "native": {
+          "cold_seconds": 8.160003926604986e-05,
+          "hot_seconds": 3.803985001286492e-05,
+          "compile_seconds": 2.659996971487999e-05,
+          "init_seconds": 2.5000073947012424e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 0.03638684025669392
+        }
+      }
+    },
+    {
+      "name": "临界短循环",
+      "tokens": 4,
+      "build_seconds": 3.860006108880043e-05,
+      "memory_cells": 0,
+      "output_characters": 0,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 7.699942216277122e-06,
+      "engines": {
+        "reference": {
+          "cold_seconds": 6.500049494206905e-06,
+          "hot_seconds": 4.509749996941536e-06,
+          "compile_seconds": 0,
+          "init_seconds": 3.029999788850546e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 1.2399861589074135e-05,
+          "hot_seconds": 3.985050017945469e-06,
+          "compile_seconds": 7.699942216277122e-06,
+          "init_seconds": 3.969995304942131e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.1316670999443519
+        },
+        "auto": {
+          "cold_seconds": 1.759990118443966e-05,
+          "hot_seconds": 1.3051250018179417e-05,
+          "compile_seconds": 0.0,
+          "init_seconds": 3.559992182999849e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 0.3455416140721993
+        },
+        "specialized": {
+          "cold_seconds": 0.00017659994773566723,
+          "hot_seconds": 3.504340001381934e-05,
+          "compile_seconds": 0.00013890000991523266,
+          "init_seconds": 2.2900057956576347e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 0,
+          "hot_speedup": 0.12869042373637032
+        },
+        "native": {
+          "cold_seconds": 6.989995017647743e-05,
+          "hot_seconds": 3.8106649997644126e-05,
+          "compile_seconds": 2.219993621110916e-05,
+          "init_seconds": 2.3399945348501205e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 0.11834548555751669
+        }
+      }
+    },
+    {
+      "name": "长递减",
+      "tokens": 4,
+      "build_seconds": 4.2500090785324574e-05,
+      "memory_cells": 0,
+      "output_characters": 0,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 7.4999406933784485e-06,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.08865739998873323,
+          "hot_seconds": 0.09096390008926392,
+          "compile_seconds": 0,
+          "init_seconds": 2.7700094506144524e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.08511209988500923,
+          "hot_seconds": 0.08284940000157803,
+          "compile_seconds": 7.4999406933784485e-06,
+          "init_seconds": 3.0099996365606785e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0979427743294619
+        },
+        "auto": {
+          "cold_seconds": 5.13000413775444e-05,
+          "hot_seconds": 3.379990812391043e-05,
+          "compile_seconds": 1.079996582120657e-05,
+          "init_seconds": 7.400056347250938e-06,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 2691.2469630328683
+        },
+        "specialized": {
+          "cold_seconds": 0.01007650000974536,
+          "hot_seconds": 0.009140299982391298,
+          "compile_seconds": 0.00019029993563890457,
+          "init_seconds": 3.2400013878941536e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 0,
+          "hot_speedup": 9.951960030251197
+        },
+        "native": {
+          "cold_seconds": 6.490002851933241e-05,
+          "hot_seconds": 4.5599997974932194e-05,
+          "compile_seconds": 1.4199991710484028e-05,
+          "init_seconds": 8.600065484642982e-06,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 1994.8224589674267
+        }
+      }
+    },
+    {
+      "name": "深度寻址",
+      "tokens": 9,
+      "build_seconds": 6.850005593150854e-05,
+      "memory_cells": 3,
+      "output_characters": 0,
+      "can_direct_addressing": true,
+      "flat_compile_seconds": 1.9900035113096237e-05,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.016543100005947053,
+          "hot_seconds": 0.015338700031861663,
+          "compile_seconds": 0,
+          "init_seconds": 2.5300076231360435e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.010541400057263672,
+          "hot_seconds": 0.01061849994584918,
+          "compile_seconds": 1.9900035113096237e-05,
+          "init_seconds": 2.8799986466765404e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.4445260733704322
+        },
+        "auto": {
+          "cold_seconds": 0.00045759999193251133,
+          "hot_seconds": 0.0003926000790670514,
+          "compile_seconds": 2.2900057956576347e-05,
+          "init_seconds": 1.6600009985268116e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 39.06952863665113
+        },
+        "specialized": {
+          "cold_seconds": 0.0017945999279618263,
+          "hot_seconds": 0.0014296999434009194,
+          "compile_seconds": 0.00022629997693002224,
+          "init_seconds": 2.129992935806513e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 0,
+          "hot_speedup": 10.728614841639084
+        },
+        "native": {
+          "cold_seconds": 0.0002543999580666423,
+          "hot_seconds": 0.00020899996161460876,
+          "compile_seconds": 1.9000028260052204e-05,
+          "init_seconds": 1.3199984095990658e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 73.39092272249256
+        }
+      }
+    },
+    {
+      "name": "大整数",
+      "tokens": 11,
+      "build_seconds": 4.549999721348286e-05,
+      "memory_cells": 2,
+      "output_characters": 0,
+      "can_direct_addressing": true,
+      "flat_compile_seconds": 1.0299962013959885e-05,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.005867100087925792,
+          "hot_seconds": 0.005357499932870269,
+          "compile_seconds": 0,
+          "init_seconds": 2.2600055672228336e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.0042888999450951815,
+          "hot_seconds": 0.004279799992218614,
+          "compile_seconds": 1.0299962013959885e-05,
+          "init_seconds": 2.489995677024126e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.2518108188726325
+        },
+        "auto": {
+          "cold_seconds": 0.00046259991358965635,
+          "hot_seconds": 0.00038510002195835114,
+          "compile_seconds": 1.7400016076862812e-05,
+          "init_seconds": 1.2299977242946625e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 13.911969949068677
+        },
+        "specialized": {
+          "cold_seconds": 0.0009596999734640121,
+          "hot_seconds": 0.0006701999809592962,
+          "compile_seconds": 0.00025349995121359825,
+          "init_seconds": 2.0400038920342922e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 0,
+          "hot_speedup": 7.993882550103579
+        },
+        "native": {
+          "cold_seconds": 0.0004094999749213457,
+          "hot_seconds": 0.00040280004031956196,
+          "compile_seconds": 2.110004425048828e-05,
+          "init_seconds": 1.479999627918005e-05,
+          "compiled_loops": 1,
+          "specialized_runs": 1,
+          "native_runs": 1,
+          "hot_speedup": 13.300643983600123
+        }
+      }
+    },
+    {
+      "name": "P003",
+      "tokens": 2894,
+      "build_seconds": 0.010250299936160445,
+      "memory_cells": 1287,
+      "output_characters": 6,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.002481200033798814,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.10655249992851168,
+          "hot_seconds": 0.11092200002167374,
+          "compile_seconds": 0,
+          "init_seconds": 1.880002673715353e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.08279760007280856,
+          "hot_seconds": 0.07623589993454516,
+          "compile_seconds": 0.002481200033798814,
+          "init_seconds": 2.6799971237778664e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.4549838083751812
+        },
+        "auto": {
+          "cold_seconds": 0.012644800008274615,
+          "hot_seconds": 0.003942099981941283,
+          "compile_seconds": 0.008924199966713786,
+          "init_seconds": 2.510007470846176e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 28.13779471089171
+        },
+        "specialized": {
+          "cold_seconds": 0.05586809990927577,
+          "hot_seconds": 0.025198000017553568,
+          "compile_seconds": 0.03106360009405762,
+          "init_seconds": 2.8399983420968056e-05,
+          "compiled_loops": 6,
+          "specialized_runs": 18,
+          "native_runs": 0,
+          "hot_speedup": 4.402016030812074
+        },
+        "native": {
+          "cold_seconds": 0.012524699908681214,
+          "hot_seconds": 0.004086200031451881,
+          "compile_seconds": 0.00929099996574223,
+          "init_seconds": 3.260001540184021e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 27.145513966006625
+        }
+      }
+    },
+    {
+      "name": "P004",
+      "tokens": 1513,
+      "build_seconds": 0.00455890002194792,
+      "memory_cells": 10936,
+      "output_characters": 7,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.0007717999396845698,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.0901530000846833,
+          "hot_seconds": 0.0917638000100851,
+          "compile_seconds": 0,
+          "init_seconds": 2.8999987989664078e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.05784759996458888,
+          "hot_seconds": 0.05528500000946224,
+          "compile_seconds": 0.0007717999396845698,
+          "init_seconds": 2.9799994081258774e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.6598317806706953
+        },
+        "auto": {
+          "cold_seconds": 0.011095399968326092,
+          "hot_seconds": 0.007186600007116795,
+          "compile_seconds": 0.00425799994263798,
+          "init_seconds": 3.979995381087065e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 12.768736247907583
+        },
+        "specialized": {
+          "cold_seconds": 0.02542860002722591,
+          "hot_seconds": 0.010473599890246987,
+          "compile_seconds": 0.013681899989023805,
+          "init_seconds": 2.9499991796910763e-05,
+          "compiled_loops": 3,
+          "specialized_runs": 3,
+          "native_runs": 0,
+          "hot_speedup": 8.76143837569502
+        },
+        "native": {
+          "cold_seconds": 0.015074299997650087,
+          "hot_seconds": 0.009667900041677058,
+          "compile_seconds": 0.005589400068856776,
+          "init_seconds": 3.5800039768218994e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 9.49159585995959
+        }
+      }
+    },
+    {
+      "name": "P005",
+      "tokens": 1529,
+      "build_seconds": 0.008647799957543612,
+      "memory_cells": 3183,
+      "output_characters": 2,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.0012583000352606177,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.24299759999848902,
+          "hot_seconds": 0.25102119997609407,
+          "compile_seconds": 0,
+          "init_seconds": 1.8900027498602867e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.16597970004659146,
+          "hot_seconds": 0.1612460999749601,
+          "compile_seconds": 0.0012583000352606177,
+          "init_seconds": 2.829998265951872e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.5567582720765039
+        },
+        "auto": {
+          "cold_seconds": 0.015004399931058288,
+          "hot_seconds": 0.008583199931308627,
+          "compile_seconds": 0.006467500003054738,
+          "init_seconds": 3.490003291517496e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 29.245642882027383
+        },
+        "specialized": {
+          "cold_seconds": 0.050677299965173006,
+          "hot_seconds": 0.028605999890714884,
+          "compile_seconds": 0.022146599949337542,
+          "init_seconds": 3.1800009310245514e-05,
+          "compiled_loops": 3,
+          "specialized_runs": 3,
+          "native_runs": 0,
+          "hot_speedup": 8.7751241325276
+        },
+        "native": {
+          "cold_seconds": 0.014911900041624904,
+          "hot_seconds": 0.008990700007416308,
+          "compile_seconds": 0.005823599989525974,
+          "init_seconds": 3.2400013878941536e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 27.92009518380438
+        }
+      }
+    },
+    {
+      "name": "P006",
+      "tokens": 3965,
+      "build_seconds": 0.019292999990284443,
+      "memory_cells": 463,
+      "output_characters": 128,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.003819799982011318,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.5848079000134021,
+          "hot_seconds": 0.5633688000962138,
+          "compile_seconds": 0,
+          "init_seconds": 1.9600032828748226e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.4072417999850586,
+          "hot_seconds": 0.41649740003049374,
+          "compile_seconds": 0.003819799982011318,
+          "init_seconds": 1.9700033590197563e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.3526346144176817
+        },
+        "auto": {
+          "cold_seconds": 0.03138070006389171,
+          "hot_seconds": 0.019190800026990473,
+          "compile_seconds": 0.009493199991993606,
+          "init_seconds": 2.110004425048828e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 29.3561914721573
+        },
+        "specialized": {
+          "cold_seconds": 0.4211278000148013,
+          "hot_seconds": 0.3895606999285519,
+          "compile_seconds": 0.04429579991847277,
+          "init_seconds": 1.950003206729889e-05,
+          "compiled_loops": 2,
+          "specialized_runs": 129,
+          "native_runs": 0,
+          "hot_speedup": 1.4461643594940135
+        },
+        "native": {
+          "cold_seconds": 0.031729600043036044,
+          "hot_seconds": 0.020296000060625374,
+          "compile_seconds": 0.0124175000237301,
+          "init_seconds": 2.929999027401209e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 27.757627040470894
+        }
+      }
+    },
+    {
+      "name": "P007",
+      "tokens": 3802,
+      "build_seconds": 0.01570220000576228,
+      "memory_cells": 848,
+      "output_characters": 128,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.0019893000135198236,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.5994538000086322,
+          "hot_seconds": 0.5760828999336809,
+          "compile_seconds": 0,
+          "init_seconds": 2.110004425048828e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.44923070003278553,
+          "hot_seconds": 0.45066489989403635,
+          "compile_seconds": 0.0019893000135198236,
+          "init_seconds": 2.0399922505021095e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.2782954698028042
+        },
+        "auto": {
+          "cold_seconds": 0.02903209999203682,
+          "hot_seconds": 0.020799700054340065,
+          "compile_seconds": 0.009645699989050627,
+          "init_seconds": 2.2099935449659824e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 27.69669266521348
+        },
+        "specialized": {
+          "cold_seconds": 0.20973050000611693,
+          "hot_seconds": 0.17212859995197505,
+          "compile_seconds": 0.03699870011769235,
+          "init_seconds": 1.8600025214254856e-05,
+          "compiled_loops": 8,
+          "specialized_runs": 261,
+          "native_runs": 0,
+          "hot_speedup": 3.3468168572474974
+        },
+        "native": {
+          "cold_seconds": 0.03850709996186197,
+          "hot_seconds": 0.026487599941901863,
+          "compile_seconds": 0.012981100007891655,
+          "init_seconds": 2.4300068616867065e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 21.749154366468318
+        }
+      }
+    },
+    {
+      "name": "P008",
+      "tokens": 4285,
+      "build_seconds": 0.017131400061771274,
+      "memory_cells": 476,
+      "output_characters": 11,
+      "can_direct_addressing": false,
+      "flat_compile_seconds": 0.003500099992379546,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.38515660003758967,
+          "hot_seconds": 0.3959430999821052,
+          "compile_seconds": 0,
+          "init_seconds": 1.7400016076862812e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.0
+        },
+        "flat": {
+          "cold_seconds": 0.2978211999870837,
+          "hot_seconds": 0.28852210007607937,
+          "compile_seconds": 0.003500099992379546,
+          "init_seconds": 2.3000058718025684e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 0,
+          "hot_speedup": 1.3723146333598029
+        },
+        "auto": {
+          "cold_seconds": 0.044937699916772544,
+          "hot_seconds": 0.029241199954412878,
+          "compile_seconds": 0.015025299973785877,
+          "init_seconds": 2.0699924789369106e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 13.540590009964767
+        },
+        "specialized": {
+          "cold_seconds": 0.3605749000562355,
+          "hot_seconds": 0.3011764999246225,
+          "compile_seconds": 0.04097800003364682,
+          "init_seconds": 2.350006252527237e-05,
+          "compiled_loops": 11,
+          "specialized_runs": 216,
+          "native_runs": 0,
+          "hot_speedup": 1.3146546961041137
+        },
+        "native": {
+          "cold_seconds": 0.047668599989265203,
+          "hot_seconds": 0.025871500023640692,
+          "compile_seconds": 0.015346999978646636,
+          "init_seconds": 1.8400023691356182e-05,
+          "compiled_loops": 0,
+          "specialized_runs": 0,
+          "native_runs": 1,
+          "hot_speedup": 15.304218913487926
+        }
+      }
+    }
+  ]
+}

@@ -1,12 +1,21 @@
 """PP3 热点循环专用编译器；动态 Python 扩展保持原版执行路径。"""
 
 import builtins
+import gc
+import os
 from collections import OrderedDict, defaultdict
 import signal
 import sys
 from time import perf_counter
 from types import MethodType
 import weakref
+
+try:
+    if os.environ.get("PP3_DISABLE_NATIVE") == "1":
+        raise ImportError("原生扩展已由环境变量禁用")
+    from . import _native
+except ImportError:
+    _native = None
 
 from .handlers import HandlerType
 from .pp3 import (
@@ -17,13 +26,16 @@ from .pp3 import (
 
 _INT, _TYPE, _STR = int, type, str
 _RANGE = range
+_IO_BUILTINS = {name: getattr(builtins, name) for name in ("input", "int", "print", "chr", "ord")}
 _RUN = Runtime.run
 _HANDLES = {cls: cls.handle for cls in (Data, AddSelf, SubSelf, Input, Print, InputAsChar, PrintAsChar, Debug)}
+_HANDLE_CODES = {cls: function.__code__ for cls, function in _HANDLES.items()}
 _MEMORY = {
     MemHandlerType.Get: ReferenceRuntime.get,
     MemHandlerType.Set: ReferenceRuntime.set,
     MemHandlerType.Swap: ReferenceRuntime.swap,
 }
+_MEMORY_CODES = {kind: function.__code__ for kind, function in _MEMORY.items()}
 _CACHE = OrderedDict()
 _CACHE_LIMIT = 128
 _HOT_ITERATIONS = 8
@@ -44,14 +56,15 @@ def _standard_handler(runtime, node):
     cls = _TYPE(node)
     target = runtime._std_handlers.get(cls, node)
     return (cls in _HANDLES and _TYPE(target) is cls
-            and cls.__dict__.get("handle") is _HANDLES[cls] and "handle" not in target.__dict__)
+            and cls.__dict__.get("handle") is _HANDLES[cls] and "handle" not in target.__dict__
+            and _HANDLES[cls].__code__ is _HANDLE_CODES[cls])
 
 
 def _plain_memory_dispatch(runtime):
     table = runtime.mem_handler_map
     return _TYPE(table) is dict and all(
         _TYPE(table.get(kind)) is MethodType and table[kind].__self__ is runtime
-        and table[kind].__func__ is function
+        and table[kind].__func__ is function and function.__code__ is _MEMORY_CODES[kind]
         for kind, function in _MEMORY.items()
     )
 
@@ -76,6 +89,8 @@ def _ordinary_state(runtime):
 
 
 def _callbacks_active():
+    if gc.callbacks:
+        return True
     if sys.gettrace() is not None or sys.getprofile() is not None:
         return True
     monitoring = getattr(sys, "monitoring", None)
@@ -89,9 +104,9 @@ def _callbacks_active():
     return False
 
 
-def _describe(loop, runtime):
+def _describe(loop, runtime, allow_host=False):
     """仅查看已知原生节点；未知或延迟序列不提前求值或报错。"""
-    budget = [_MAX_NODES]
+    budget = [16000 if allow_host else _MAX_NODES]
     visiting = set()
     checked = set()
 
@@ -109,7 +124,7 @@ def _describe(loop, runtime):
     def block(node, depth):
         if (_TYPE(node) is not LoopBlock or not known_class(LoopBlock)
                 or node.TYPE is not HandlerType.Loop or _TYPE(node.body) is not list
-                or depth > _MAX_NESTING or id(node.body) in visiting):
+                or depth > (32 if allow_host else _MAX_NESTING) or id(node.body) in visiting):
             return None
         visiting.add(id(node.body))
         result = []
@@ -122,7 +137,7 @@ def _describe(loop, runtime):
                 nested = block(child, depth + 1)
                 if nested is None:
                     return None
-                result.append(("loop", nested))
+                result.append(("loop", nested, child) if allow_host else ("loop", nested))
             elif cls is Data and known_class(cls) and child.TYPE is HandlerType.InPlace:
                 if _TYPE(child.data) is not _INT or not _standard_handler(runtime, child):
                     return None
@@ -140,7 +155,10 @@ def _describe(loop, runtime):
                     return None
                 result.append(("direct" if direct else "indirect", child.h_type, parameter))
             else:
-                return None
+                if (not allow_host or not known_class(cls) or child.TYPE is not HandlerType.InPlace
+                        or _TYPE(child.__dict__) is not dict):
+                    return None
+                result.append(("host", child))
         visiting.remove(id(node.body))
         return tuple(result)
 
@@ -151,7 +169,18 @@ def _describe(loop, runtime):
         return None
 
 
-def _compile(description):
+def _compile(description, backend="specialized"):
+    if backend == "native":
+        from ._native_codegen import encode
+        try:
+            program = _native.compile(encode(description))
+        except OverflowError:
+            # 任意精度的寻址深度仍由 Python range 原样处理。
+            return _compile(description)
+        def execute_native(runtime):
+            _native.run(program, runtime)
+        execute_native._pp3_native = True
+        return execute_native
     constants = []
     lines = ["def execute(runtime):", "    memory = runtime.memory", "    view = runtime.view", "    try:"]
 
@@ -220,14 +249,15 @@ def _specialize(runtime, node):
     if _callbacks_active() or not _ordinary_state(runtime):
         stats["fallbacks"] += 1
         return False
+    backend = "native" if _native is not None and runtime._engine in ("auto", "native") else "specialized"
     cached = _cached(node)
-    if cached is not None and cached[1] == description:
+    if cached is not None and cached[1] == description and cached[3] == backend:
         function = cached[2]
         stats["cache_hits"] += 1
     else:
         start = perf_counter()
         try:
-            function = _compile(description)
+            function = _compile(description, backend)
         except Exception:
             # 宿主也可能禁止动态编译；优化失败不能变成 DSL 的新增异常。
             stats["fallbacks"] += 1
@@ -237,18 +267,20 @@ def _specialize(runtime, node):
         stats["compiled_loops"] += 1
         key = id(node)
         reference = weakref.ref(node, lambda ignored, key=key: _CACHE.pop(key, None))
-        _CACHE[key] = reference, description, function
+        _CACHE[key] = reference, description, function, backend
         _CACHE.move_to_end(key)
         while len(_CACHE) > _CACHE_LIMIT:
             _CACHE.popitem(last=False)
     stats["specialized_runs"] += 1
+    if getattr(function, "_pp3_native", False):
+        stats["native_runs"] += 1
     function(runtime)
     return True
 
 
 def _run_loop(runtime, node):
     iterations = 0
-    eager = runtime._engine == "specialized" or _cached(node) is not None
+    eager = runtime._engine in ("specialized", "native") or _cached(node) is not None
     if eager and runtime.view != 0 and _specialize(runtime, node):
         return
     while runtime.view != 0:

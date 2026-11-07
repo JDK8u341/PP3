@@ -7,7 +7,7 @@ PP3 是一个用 Python 实现的极简指令语言运行时。项目核心文�
 - 一个 `IRBuilder`，用于把文本形式的 PP3 指令编译成可执行 IR
 - 两种内存访问方式：直接寻址和间接寻址
 
-`Runtime` 现在默认使用热点循环专用执行器：保留原 IR、任意精度整数和 `defaultdict(int)`，在运行中把已验证的纯计算热点编译为专用 Python 字节码函数，短程序和动态扩展继续解释执行。无需额外安装原生编译器。
+`Runtime` 默认选择 PP3 原生执行器：安装可选 C++ 扩展后，普通程序使用 PP3 专属字节码 VM，标准 I/O 也进入原生调度；未安装时使用 Python 专用函数回退。另提供 LLVM JIT 和 Clang AOT，均生成真实机器码。各路径保留原 IR、任意精度整数、公开 `defaultdict(int)` 和 Python 扩展接口。数学证明、构建和兼容边界见[执行器设计](docs/executor.md)。
 
 旧实现保留为 `ReferenceRuntime`，用于回归对照和诊断，不建议作为日常默认执行器。路线比较、兼容性证明和冷/热测量见[执行器设计](docs/executor.md)与[基准报告](benchmarks/README.md)。
 
@@ -15,7 +15,13 @@ PP3 是一个用 Python 实现的极简指令语言运行时。项目核心文�
 
 请自行 clone 本仓库，然后进入项目目录即可使用。
 
-项目没有额外的第三方依赖，只需要 Python 3。
+纯 Python 使用只需要 Python 3.10+，没有第三方运行依赖。可选安装 C++ 扩展以启用原生 VM：
+
+```text
+python -m pip install -e .
+```
+
+需要 Clang/LLVM C++17 工具链，Windows 使用 `clang-cl` 与 `lld-link`，并需匹配 Python ABI 的 SDK/CRT 头文件和库。无工具链时仍可使用纯 Python 后端。可选 `python -m pip install -e ".[jit,aot]"` 安装 LLVM JIT 与 AOT 构建依赖。
 
 ## 快速开始
 
@@ -256,7 +262,7 @@ rt = Runtime(can_direct_addressing=False)
 参数：
 
 - `can_direct_addressing`：是否允许直接寻址。默认是 `False`。
-- `engine`：新增的可选关键字参数。默认 `"auto"` 按热点选择编译；`"reference"` 强制参考路径；`"specialized"` 尝试立即编译可支持循环，仅建议用于诊断或已知热点，短程序可能因编译和检查变慢。
+- `engine`：可选关键字参数。`"auto"` 自动选择原生 VM/回退；`"reference"` 强制参考路径；`"specialized"` 强制 Python 专用循环；`"native"` 要求已安装原生扩展，但动态状态不满足守卫时仍回退。短程序可能因检查成本变慢。
 
 常用属性：
 
@@ -273,7 +279,7 @@ rt.clear()
 - `run(handles)`：执行由 `IRBuilder.build()` 生成的 IR，或手动构造的 handler 列表。
 - `clear()`：清空内存和本 Runtime 的字符输入缓冲，并把 `view` 重置为 `0`。
 
-原有调用、手工 handler 列表和 `IRBuilder.build()` 返回的列表接口不变。新增 `rt.execution_stats` 返回编译次数、命中、回退和编译秒数的副本；这些统计不占用 DSL 内存。`clear()` 保持原来的作用，不清空累计统计或全局有界代码缓存。
+原有调用、手工 handler 列表和 `IRBuilder.build()` 的列表接口不变。`rt.execution_stats` 返回编译次数、原生进入次数、退优化、回退和编译秒数的副本，不占用 DSL 内存。`clear()` 保持原来的作用，不清空累计统计或有界代码缓存。
 
 ```python
 rt = Runtime()                       # 推荐：自动执行器
@@ -281,7 +287,22 @@ rt = Runtime(engine="reference")     # 诊断时强制原路径
 reference = ReferenceRuntime()        # 独立原版语义对照
 ```
 
-自定义 handler、I/O、debug 和 cup 始终通过原 handler 接口执行；修改标准操作或内存分派、替换内存对象、继承 Runtime 时，不能证明安全的区域回退。IR 修改会在再次进入编译循环前核对，缓存不持有 Runtime 或字符缓冲。
+标准 I/O 有 C 层实现；自定义 handler、debug 和 cup 通过原接口调用。宿主调用前提交完整状态，调用后核对 IR、注册表和运行器，失效时从当前执行位置退优化。Runtime 子类、特殊映射、改写分派及观测工具使用兼容回退。整段缓存最多保留 4 份 IR，纯循环缓存为 128 项弱引用 LRU。
+
+### LLVM JIT 与 Clang AOT
+
+```python
+from src.jit import compile_jit
+from src.aot import compile_aot
+
+jit = compile_jit(ir)
+jit.run(Runtime())
+
+aot = compile_aot(ir, "build/my-aot")
+aot.run(Runtime())
+```
+
+两者编译为本机机器码，显式支付编译成本后可反复运行。AOT 需要 Clang 工具链，JIT 需要 llvmlite。默认 `Runtime()` 不自动启动外部编译器或 LLVM JIT，避免短程序得不偿失。IR/扩展修改时不会执行旧机器码。
 
 ### IRBuilder
 

@@ -26,7 +26,8 @@ class FixtureTests(unittest.TestCase):
                     expected = snapshot(pp3.ReferenceRuntime(), ir, case["stdin"])
                     self.assertEqual(expected[2], case["stdout"])
                     self.assertIsNone(expected[3])
-                    for engine in ("auto", "specialized"):
+                    engines = ("auto", "specialized") + (() if pp3._native_unavailable() else ("native",))
+                    for engine in engines:
                         self.assertEqual(snapshot(pp3.Runtime(engine=engine), ir, case["stdin"]), expected)
 
 
