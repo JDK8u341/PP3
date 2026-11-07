@@ -19,10 +19,10 @@
 
 ```text
 python -m pip install -e .
-python -m pip install -e ".[jit]"
+python -m pip install -e ".[jit,aot]"
 ```
 
-第二条额外安装 llvmlite；其 LLVM 可与本机 Clang 版本不同，二者只通过稳定的原生函数地址桥接，不混合不同 LLVM 版本的 bitcode。机器码 JIT 当前限定 64 位进程。
+第二条额外安装 JIT 的 llvmlite 与 AOT 运行期构建需要的 setuptools；LLVM 可与本机 Clang 版本不同，二者只通过稳定的原生函数地址桥接，不混合不同 LLVM 版本的 bitcode。机器码 JIT 当前限定 64 位进程。
 
 ```python
 from src.pp3 import IRBuilder, Runtime, std_register

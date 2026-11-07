@@ -2,12 +2,14 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstddef>
 #include <limits>
 #include <memory>
 #include <new>
 #include <stdexcept>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -217,6 +219,10 @@ public:
                 yields_ = 0;
                 // 让宿主线程能够请求中断；活动 Runtime/IR 的并发写入仍须调用者同步。
                 PyThreadState* state = PyEval_SaveThread();
+#ifndef _WIN32
+                // POSIX 上立即重新获取 GIL 可能饿死等待中的中断线程。
+                std::this_thread::sleep_for(std::chrono::microseconds(1));
+#endif
                 PyEval_RestoreThread(state);
             }
             // 调用方已排除自定义信号处理器；KeyboardInterrupt 在 catch 中回写状态。

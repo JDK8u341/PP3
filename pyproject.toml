@@ -10,6 +10,7 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 jit = ["llvmlite>=0.44,<0.51"]
+aot = ["setuptools>=68"]
 
 [tool.setuptools]
 packages = ["src"]

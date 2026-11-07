@@ -64,6 +64,8 @@ def compile_aot(handles, build_dir, *, runtime=None):
     """生成 C++、编译并加载扩展；已有同一实现/字节码/ABI 产物时直接复用。"""
     if _executor._native is None:
         raise RuntimeError("AOT 需要先构建 PP3 原生扩展")
+    if importlib.util.find_spec("setuptools") is None:
+        raise RuntimeError("AOT 需要 setuptools；请安装项目的 [aot] 可选依赖")
     if type(handles) is not list:
         raise TypeError("AOT 输入必须是 IRBuilder 返回的普通列表")
     runtime = runtime or pp3.Runtime()
@@ -101,7 +103,7 @@ def compile_aot(handles, build_dir, *, runtime=None):
                                 errors="replace")
         (output / "build.log").write_text(result.stdout, encoding="utf-8")
         if result.returncode or not artifact.is_file():
-            raise RuntimeError(f"AOT 构建失败，详见 {output / 'build.log'}")
+            raise RuntimeError(f"AOT 构建失败，详见 {output / 'build.log'}\n{result.stdout[-4000:]}")
     spec = importlib.util.spec_from_file_location(module_name, artifact)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

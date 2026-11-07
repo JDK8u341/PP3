@@ -21,7 +21,7 @@ PP3 是一个用 Python 实现的极简指令语言运行时。项目核心文�
 python -m pip install -e .
 ```
 
-需要 Clang/LLVM C++17 工具链，Windows 使用 `clang-cl` 与 `lld-link`，并需匹配 Python ABI 的 SDK/CRT 头文件和库。无工具链时仍可使用纯 Python 后端。可选 `python -m pip install -e ".[jit]"` 安装 LLVM JIT 依赖。
+需要 Clang/LLVM C++17 工具链，Windows 使用 `clang-cl` 与 `lld-link`，并需匹配 Python ABI 的 SDK/CRT 头文件和库。无工具链时仍可使用纯 Python 后端。可选 `python -m pip install -e ".[jit,aot]"` 安装 LLVM JIT 与 AOT 构建依赖。
 
 ## 快速开始
 
