@@ -96,13 +96,15 @@ class Runtime(ReferenceRuntime):
     """保留原接口，自动为热点纯计算循环选择专用执行函数。"""
 
     def __init__(self, can_direct_addressing=False, *, engine="auto"):
-        if engine not in ("auto", "specialized", "reference"):
-            raise ValueError("engine 必须为 auto、specialized 或 reference")
+        if engine not in ("auto", "specialized", "reference", "native"):
+            raise ValueError("engine 必须为 auto、specialized、native 或 reference")
         super().__init__(can_direct_addressing)
         self._engine = engine
+        self._native_program_cache = {}
         self._execution_stats = {
             "compiled_loops": 0, "cache_hits": 0, "specialized_runs": 0,
-            "fallbacks": 0, "compile_seconds": 0.0,
+            "fallbacks": 0, "compile_seconds": 0.0, "native_runs": 0,
+            "compiled_programs": 0, "deoptimizations": 0,
         }
 
     @property
@@ -111,10 +113,17 @@ class Runtime(ReferenceRuntime):
         return dict(self._execution_stats)
 
     def run(self, handles):
+        if self._engine == "native" and _native_unavailable():
+            raise RuntimeError("native 执行器未安装；先构建 PP3 C++ 扩展")
         if self._engine == "reference" or type(self) is not Runtime:
             return ReferenceRuntime.run(self, handles)
         if sys.gettrace() is not None or sys.getprofile() is not None:
             return ReferenceRuntime.run(self, handles)
+        if (self._engine in ("native", "auto") and not _native_unavailable()
+                and type(handles) is list and len(handles) > 16):
+            from ._program import try_run
+            if try_run(self, handles):
+                return
         if type(handles) is list and len(handles) <= 16 and not any(type(h) is LoopBlock for h in handles):
             return ReferenceRuntime.run(self, handles)
         return _execute(self, handles)
@@ -288,3 +297,8 @@ class IRBuilder:
 
 # 指令类定义完成后再加载执行器，保持 char_io 先导入时的独立性。
 from ._executor import execute as _execute
+from ._executor import _native
+
+
+def _native_unavailable():
+    return _native is None

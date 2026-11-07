@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pp3-runtime"
+version = "0.1.0"
+description = "PP3 runtime with an optional native graph executor"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+jit = ["llvmlite>=0.44,<0.51"]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-data]
+src = ["*.cpp", "*.hpp"]

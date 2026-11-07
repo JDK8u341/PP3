@@ -4,6 +4,7 @@ from collections import defaultdict
 from contextlib import redirect_stdout
 import copy
 from io import StringIO
+import os
 import random
 import sys
 import unittest
@@ -30,7 +31,8 @@ class ExecutionTests(unittest.TestCase):
 
     def compare(self, source, stdin="", *, memory=None, view=0, direct=False):
         results = []
-        for engine in ("reference", "auto", "specialized"):
+        engines = ("reference", "auto", "specialized") + (() if pp3._native_unavailable() else ("native",))
+        for engine in engines:
             rt = pp3.Runtime(direct, engine=engine)
             rt.view = view
             if memory is not None:
@@ -39,6 +41,8 @@ class ExecutionTests(unittest.TestCase):
             results.append(snapshot(rt, ir, stdin))
         self.assertEqual(results[0], results[1])
         self.assertEqual(results[0], results[2])
+        if len(results) > 3:
+            self.assertEqual(results[0], results[3])
         return results[0]
 
     def test_hot_loop_uses_specialization_and_global_ir_cache(self):
@@ -71,6 +75,36 @@ class ExecutionTests(unittest.TestCase):
         self.compare("&100 [ &-5 *26 &0 ]", memory={-5: -6, -6: -5})
         large = 10**400
         self.compare(f"&20 [ &{large} @+ @- ^1 ~1 &0 ]")
+
+    def test_native_graph_cycle_skips_large_indirect_depth(self):
+        if pp3._native_unavailable():
+            self.skipTest("原生扩展未构建")
+        runtime = pp3.Runtime(engine="native")
+        runtime.view = 1
+        runtime.memory.update({1: 2, 2: 1})
+        depth = 10**12 + 1
+        runtime.run(self.builder.build(f"[ ~{depth} ^1 &0 ]"))
+        self.assertEqual(runtime.view, 0)
+        self.assertEqual(list(runtime.memory.items()), [(1, 2), (2, 2)])
+
+    def test_native_engine_requires_built_extension(self):
+        if not pp3._native_unavailable():
+            self.skipTest("原生扩展已构建")
+        with self.assertRaisesRegex(RuntimeError, "未安装"):
+            pp3.Runtime(engine="native").run([])
+
+    def test_native_extension_is_built_when_required(self):
+        if os.environ.get("PP3_REQUIRE_NATIVE") == "1":
+            self.assertFalse(pp3._native_unavailable())
+
+    def test_native_arithmetic_summary_keeps_python_integer_range(self):
+        if pp3._native_unavailable():
+            self.skipTest("原生扩展未构建")
+        runtime = pp3.Runtime(engine="native")
+        runtime.view = 10**200
+        runtime.run(self.builder.build("[ @- ]"))
+        self.assertEqual(runtime.view, 0)
+        self.assertGreater(runtime.execution_stats["native_runs"], 0)
 
     def test_memory_insertion_order_and_missing_reads_are_preserved(self):
         state = self.compare("&20 [ &7 ~5 &8 ^4 &9 *3 &0 ]")

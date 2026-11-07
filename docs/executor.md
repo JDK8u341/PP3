@@ -1,81 +1,131 @@
-# PP3 专用执行器设计
+# PP3 原生执行与机器码编译
 
-目标是减少解释器开销，保持现有语言、操作注册及 Python 接口。没有将任意精度整数改成机器整数，没有改变 `memory` 的公开类型，没有把算法输入交给宿主预计算。
+目标是保持 PP3 的整数、寻址、输入输出和 Python 扩展语义，改变内部表示与执行方式以减少开销。实现分成 PP3 专属字节码 VM、LLVM JIT、Clang AOT；原 Python 专用函数作为没有原生工具链时的回退，`ReferenceRuntime` 保留原版用于差分，不建议日常使用。
 
-## 路线取舍
+## 四条执行路线
 
-原版执行器的每条操作经过 handler 类型判断、枚举字典分派和 Python 调用；间接寻址另有按固定深度的 Python 循环。PP3 宏反复组合这些操作，因此消除分派比单独改快一个整数加法更有价值。
-
-此次实现并测量了两条路线：
-
-| 路线 | 实际工作 | 取舍 |
+| 路线 | 实际执行方式 | 入口 |
 | --- | --- | --- |
-| 扁平字节码 | 括号改跳转、整数 opcode、集中解释循环 | 可减少对象分派，但仍逐条分派；仅作基准候选，没有完整动态接口保护，不公开为 Runtime 后端 |
-| 热点专用函数 | 纯循环生成 Python 控制流和内存操作，再用 Python 编译器产生字节码 | 消除热点内逐条分派，复用 Python 大整数/字典，实现为默认路线 |
+| 原生 VM | PP3 自己的 opcode、常量、深度和跳转表，由 C++17 执行 | 安装原生扩展后 `Runtime()` 自动选择 |
+| LLVM JIT | PP3 字节码生成 LLVM IR，再由 LLVM MCJIT 生成可执行机器码 | `src.jit.compile_jit` |
+| Clang AOT | PP3 字节码生成 C++ 控制流，通过 Clang/LLVM 编译为 `.pyd`/`.so` | `src.aot.compile_aot` |
+| Python 专用函数 | 纯循环生成 CPython 字节码函数 | `engine="specialized"` 或未安装扩展时的 auto |
 
-原生扩展和机器码 JIT 也纳入了架构调研，但未实现，也没有捏造其测量结果。若使用固定宽度本地整数与私有内存，必须为大整数、负地址、可观察默认插入和 Python 回调补充转换/退化机制；若继续用 Python 对象，跨层调用、对象操作和生命周期仍需处理。当前专用函数已消除主要分派且无需二进制构建，因此先采用可直接部署、易于逐项验证的方案。
+原生 VM 的字节码不是 Python bytecode。LLVM JIT 与 Clang AOT 都产生真实本机机器码。机器码版本仍共享原生整数、图存储、I/O 和退优化辅助函数，不是脱离 Python 的独立可执行文件。
 
-这是一种运行时热点编译，目标是 Python 字节码，**不是 LLVM 或原生机器码 JIT**。
+## 构建与使用
 
-## 执行分层
+原生 VM 和 AOT 使用 Clang，Windows 链接使用 LLD；不调用 MSVC 的 `cl.exe`/`link.exe`。Windows 仍需系统 SDK 和 CRT 头文件/库来匹配 CPython ABI；这些文件所在目录含 `MSVC` 不表示使用了 MSVC 编译器。Linux 需 Clang/C++17 和 Python 开发头文件。
 
-1. `IRBuilder` 完全保持原接口和解析行为，仍返回可修改的 handler 列表。
-2. `Runtime` 默认 `engine="auto"`，普通操作按原 handler 路径运行。
-3. 单次循环执行超过 8 轮且尚未结束时，尝试验证和编译纯计算区域。有缓存时可直接核对后执行。单一递增/递减循环若已临近零，跳过编译尝试，避免编译费超过剩余工作量。
-4. 编译的区域只含原始 Data、自增、自减、内存读写交换和嵌套循环。I/O、debug、cup、自定义 handler 均保留原调用。包含这些操作的外层循环不整体编译，但其内部纯循环仍可成为热点。
-5. 手工特殊 IR、重写操作、特殊状态以及编译失败均回退；回退没有重跑已完成的循环迭代。
+```text
+python -m pip install -e .
+python -m pip install -e ".[jit]"
+```
 
-`engine="specialized"` 是诊断入口，在可支持循环首次进入时即尝试编译，短条件分支也会付验证成本，因此不作为推荐默认。`engine="reference"` 强制旧路径；独立的 `ReferenceRuntime` 保留原版实现用于对照，不建议日常使用。
+第二条额外安装 llvmlite；其 LLVM 可与本机 Clang 版本不同，二者只通过稳定的原生函数地址桥接，不混合不同 LLVM 版本的 bitcode。机器码 JIT 当前限定 64 位进程。
 
-## 针对 PP3 的编译
+```python
+from src.pp3 import IRBuilder, Runtime, std_register
+from src.jit import compile_jit
+from src.aot import compile_aot
 
-令 `f(a)=memory[a]`，间接指令首先得到 `f^(d-1)(view)`，再执行读、写或交换。编译器保留这个顺序，将常见的 1..8 层固定深度直接展开；更大深度保留循环，防止源码随深度爆炸。
+ir = IRBuilder(std_register).build("@input [ @- ] @print")
+Runtime().run(ir)                         # 默认 VM
+jit = compile_jit(ir)                     # 显式支付 JIT 成本
+jit.run(Runtime())                       # 可反复执行
+aot = compile_aot(ir, "build/my-aot")     # 显式构建机器码扩展
+aot.run(Runtime())
+```
 
-专用函数只在区域入口读取 `memory` 与 `view`，内部使用局部变量；退出或异常时在 finally 中写回 view。内存始终是同一个公开 `defaultdict(int)`，操作仍使用 `memory[place]`，不替换成 `.get()`，所以缺失读取插入零项的行为及插入顺序保持。
+`Runtime(engine="native")` 要求扩展存在，缺失时明确报错；特殊动态状态仍回退以保持语义。`PP3_NO_NATIVE=1` 禁止构建扩展，`PP3_DISABLE_NATIVE=1` 在导入时禁用已构建的扩展。纯 Python 使用没有第三方运行依赖。
 
-没有把连续加减折叠、删掉中间读写、跳过零路径或假定某个锚点永久为零。PP3 程序即使构造环、覆盖零槽或破坏宏自己的数据布局，也仍按原始指令执行。
+默认路径不自动启动 LLVM JIT 或外部 AOT 编译器。短任务的编译成本可能超过执行成本；测量分别记录首次编译、热运行与回本次数。AOT 缓存键包含执行器源码、编译模板、字节码和 Python ABI；IR 或扩展被修改时先回退，不执行失效的机器码。构建目录应由调用者自己控制，目录中的二进制是可执行代码。
 
-生成内容来自固定模板；数值通过常量表传入，不把用户 token、操作名或整数的字符串直接当 Python 源码执行。
+## 数学模型
 
-## 可验证的兼容边界
+令状态为 `(v, f, D)`：`v` 是 view，`f: Z -> Z` 是内存映射，`D` 是已存在的键及其顺序。缺失读取不仅得到 0，也把该地址加入 `D`。因此不能把所有未写入地址看作“无需记录的零”。
 
-高速路径入口逐项核对：
+每个整数地址只有一条出边 `a -> f(a)`，构成可修改的函数图。间接指令深度为 `d` 时，先求目标地址 `p = f^(d-1)(v)`，然后：
 
-- runtime 是原始 Runtime，未改写可观察属性或 run 回调。
-- view 和整数地址单元是原生 Python int，内存是原生 `defaultdict(int)`。
-- 字符串键可保留 cup、debug 等扩展状态，但纯整数路径不会访问它们。
-- 标准操作实例和内存分派没有被改写；IR 节点、字段和循环体是已知的普通结构。
-- 没有 tracing、profiling、已注册 monitoring 工具或自定义 Python 信号回调可以观察局部 view。
+| 指令 | 状态变化 |
+| --- | --- |
+| `~d` | `v = f(p)` |
+| `^d` | `f(p) = v` |
+| `*d` | 先读取旧 `f(p)`，再交换 view 与该单元 |
 
-不符合条件的代码继续解释执行，包括内存/整数子类、自定义 handler 和 Runtime 子类。子类及实例对 run 的重写仍可观察原有递归调用；handler 返回值仍被忽略。动态输入和输出直接调用原实现，因此整数输入错误、字符缓冲、模 256、输出换行和 flush 行为不变。
+节点编号、哈希表、缓存、opcode 均不属于语言语义，可以按性能需要重排；`v`、实际键值、缺失创建及顺序、回调边界可见状态必须保留。
 
-直接寻址权限在指令实际到达时检查；不能因为未执行分支中有直接寻址就提前报错。交换保持先获取旧值、再更新 view、再写内存的顺序。编译区发生异常时，保留已完成的内存操作与最后 view。错误类型、参数与发生前的 DSL 状态逐项差分。
+### 出边缓存与局部失效
 
-兼容承诺针对顺序执行的语言状态及公开操作接口，不承诺保持 Python 内部栈帧、traceback 行号、时间和新增编译 audit 事件完全相同；需要原版宿主级观测时使用 `ReferenceRuntime`。同一个 Runtime 或活动 IR 的并发修改仍需调用者同步。有限测试也不是对任意 Python 元编程的形式化等价证明。
+Graph 为触达地址分配紧凑编号，记录值与 `successor`。读取一条已解析的边直接访问编号，不重复做 Python 整数装箱与字典查找。写入 `a` 改变的仅是 `a` 的出边；因此只失效该节点缓存。等值写入不改变边，可以保留缓存，但仍按语义记录赋值。
 
-## 缓存与编译成本
+不缓存整条路径，也不假设零槽或某个锚点永远不变。链、环、负地址、地址与载荷碰撞以及任意修改都沿当前图执行。
 
-缓存最多 128 个循环，使用弱引用标识 IR，不持有 Runtime、内存或字符输入实例。再次进入时重新验证结构和常量；修改 Data、深度、操作类型、嵌套 body 都会使旧条目失效。LRU 驱逐与 IR 回收限制长期增长。
+### 长寻址的环摘要
 
-单个候选限制为 4096 个节点和 12 层嵌套；超出仅放弃整体编译，内部较小区域仍可独立尝试。限制只影响优化选择，不拒绝源程序。宿主禁止动态编译或编译失败时，继续原路径，不把优化失败新增为 DSL 异常。
+单次寻址期间没有写入，映射固定。顺序记录节点首次出现的位置；若在第 `j` 步重复第 `i` 步的节点，则周期 `k=j-i`，剩余 `r` 步可替换为 `r mod k` 步。
 
-热点判定无法预知所有循环还会运行几次，短任务仍可能因检查或编译变慢。基准分别测首次无缓存与缓存后的执行，公开短直线、短循环、阈值附近循环，不只挑长循环的最好结果。结果见[基准说明](../benchmarks/README.md)。
+首次重复之前仍按参考顺序访问所有节点，因此所有缺失零单元均已按原顺序创建。环内没有新节点，跳跃不会漏掉可见插入。实现只在深度超过 65 时建立游走表，短路径直接走出边缓存。极长的无环前缀仍须遍历。测试包含 `10^12+1` 层两节点环、缺失链、尾链进入环、最终写入与交换。
 
-## 验证与复现
+当前 native 深度字段为 uint64，超过它的合法 Python 整数深度回退到原 Python 执行，绝不截断为 64 位。
 
-保留原有 62 项测试，新增执行器差分、随机有界程序、IR 修改、回调/重入、错误状态、缓存回收和固定真实程序。比较完整 `memory.items()`，不是只比较输出或非零单元。固定题库/研究程序来自两个独立项目的明确提交，正常运行测试无需联网。
+### 纯算术循环摘要
 
-本地另将新执行器注入 PP3-Challenges，运行其 52 项完整回归；PP3-Lab 跑过 30 项功能测试。Lab 另 5 项读取原版 `Runtime.run` 源码行并计分派，不把这种旧实现专属测量当作新架构的功能失败或性能结果。需要那种计数时，应显式使用 `ReferenceRuntime.run`。
+仅含 `@+`/`@-` 的循环体，整轮净增量为 `k`。每轮结束值为 `v_n=v_0+n*k`。由于循环只在整轮边界检查 view：
 
-CI 在 Linux、Windows 上运行 Python 3.10、3.12、3.14。测试验证正确性；性能不设依赖共享 CI 机器负载的硬性时间阈值。
+- `v_0=0`：不进入循环。
+- `k!=0` 且 `n=-v_0/k` 是正整数：最终恰为零，可直接赋零。
+- 其他情况：保留不终止行为，不擅自清零。
 
-## 调研依据
+例如 `[ @- @- ]` 对 4 可终止，对 3 不会终止；`[ @+ @- ]` 对非零输入也不会终止。方向和整除判定支持任意精度整数。连续加减另融合为净增量指令；不会删除中间的内存操作或宿主调用。不终止循环仍周期性检查信号、让出 GIL，测试通过后台线程请求 KeyboardInterrupt 验证。
 
-- [Python compile 文档](https://docs.python.org/3/library/functions.html#compile)：运行期编译的目标与接口。
-- [Python 整数 C API](https://docs.python.org/3/c-api/long.html)：原生后端仍需处理 Python 整数对象。
-- [Python 字典 C API](https://docs.python.org/3/c-api/dict.html)：保留公开 Python 内存对象时的操作边界。
-- [PyO3 性能文档](https://pyo3.rs/latest/performance.html)：跨 Python/Rust 边界与 Python 对象的成本考虑。
-- [pybind11 Python 对象文档](https://pybind11.readthedocs.io/en/stable/advanced/pycpp/object.html)：原生绑定仍须明确对象语义。
-- [sys.monitoring](https://docs.python.org/3/library/sys.monitoring.html)：除 tracing/profiling 外的宿主观测接口。
+## 原生数值和内存
 
-上述文档用于路线和接口约束；具体加速比只来自本仓库的可复现测量。
+`Number` 规范化为内联 int64 或拥有引用的 Python PyLong。加法在 C++ 中先判断范围；JIT 使用 LLVM 的有符号溢出 intrinsic。溢出时进入 PyLong，回到范围内又进入快路径。地址同样支持大整数，不截断、不转成浮点数、不使用有符号溢出未定义行为。
+
+原生图按需从公开字典取值，并按首次触达顺序保存节点。正常退出、异常退出、宿主回调前按该顺序将修改值和缺失零值写回同一个 `defaultdict(int)`。已有键更新不改变原次序，扩展使用的字符串键保持不动。公开 memory 对象身份不替换。
+
+## 标准操作与扩展边界
+
+较长的普通 IR 列表可整体编码，循环、分支和标准 I/O 均进入 PP3 VM。不是每个短循环都返回 Python、重新验证和重建图。
+
+标准 `input`、`print`、字符输入输出有 C 层 opcode。仍保留 `input()` 的行和 EOF 规则、整数转换、字符缓冲属于各 Runtime 的独立 handler、Unicode `ord()`、输出模 256、每字符 `flush=True` 等行为。
+
+已填充的精确 deque 缓冲、无实例覆盖的精确 StringIO 输出可走无用户回调快路径；普通终端、自定义流、改写后的标准函数、特殊缓冲走物化边界。不会为吞吐而合并用户可观察的 flush，也不绕过 `sys.stdin/stdout`。因此 StringIO 基准不能当作真实终端吞吐承诺。
+
+自定义 handler、cup 和 debug 通过 HOST opcode 调用原接口，返回值仍忽略。宿主可重入、改写 view/内存、替换映射、修改活动 IR 或抛异常。调用前先提交状态；调用后重新校验结构。若失效，按保存的原列表迭代位置与循环栈继续，不能从程序入口重跑，也不能用旧影子图覆盖回调留下的状态。
+
+快照持有的 Python 引用放在可被 GC 遍历的容器中，避免 capsule 隐藏 Runtime/handler 回环。字节码 capsule 只拥有原生结构与精确整数；JIT capsule 拥有代码引擎和对应字节码，防止机器码释放后再调用。
+
+## 守卫与兼容范围
+
+入口检查 Runtime/IR 类型、普通实例布局、标准方法及代码、内存分派、精确整数、defaultdict 默认工厂、直接寻址许可类型。IR、类、注册表和关键模块的结构改变会失效缓存。tracing、profiling、monitoring、自定义信号处理器和 GC callbacks 会禁用高速路径。
+
+直接寻址权限只在到达指令时检查；不可达分支不会提前报错。C++ 辅助函数不向 JIT 抛出 C++ 异常，改用错误状态返回；统一出口保留 Python 异常及其发生前的 DSL 状态。
+
+承诺对象是顺序执行的语言状态、标准 I/O 与原 Python API。不同内部表示不能保持完全相同的分配次数、MemoryError 触发时刻、内部栈帧、traceback 行号、计时、编译 audit 事件和异步信号落在哪条机器指令上。需要这些宿主实现观测时使用 ReferenceRuntime。活动 Runtime、IR 或执行所依赖的全局操作的并发改写需要外部同步。没有声称对任意 Python 元编程给出形式化全程序等价证明。
+
+## 缓存与代码生成
+
+纯循环缓存沿用有界 128 项弱引用 LRU；每个 Runtime 另最多保留 4 个整段程序。整段候选限制 16000 个 IR 节点、32 层嵌套、20000 条编码指令；超出仅回退，不拒绝语言输入。`clear()` 保留编译缓存、重置原有运行状态和字符缓冲。
+
+JIT 将控制流和常见整数操作内联为 LLVM IR；图访问、大整数、I/O、宿主守卫通过 C ABI 辅助函数。没有把 Python handler 逐项调用改名为 JIT。AOT 生成显式分支/跳转，Clang 可以内联共享图内核；运行前验证字节码结构匹配，错误 capsule 不能越界执行。
+
+选择 MCJIT 是因为 llvmlite 的公开文档与 Windows 可用接口足以覆盖当前需求；本次没有把 ORC、LLVM JITLink 或跨版本 bitcode 混用强塞进默认路径。后续可沿基本块融合、图 helper 内联、按证明消除重复访存继续探索，必须同时保留键插入和别名影响。
+
+## 验证与研究来源
+
+测试比较 view、完整有序 `memory.items()`、stdout、异常类型/参数及字符缓冲；包含 20 个固定题库/研究样本、随机有界程序、int64 边界、改写 IR、回调异常、垃圾回收和中断。CI 在 Linux/Windows、Python 3.10/3.12/3.14 构建 Clang 原生模块，运行 AOT/JIT 和禁用原生后的纯 Python 回归。
+
+Exa 共 6 组搜索、34 个候选结果位（含重复，不能当作 34 篇已验证论文），覆盖整数/字典 API、图表示与物化、部分求值、VM 分派、LLVM ORC 与 llvmlite。下列为核验并采用的主要原始资料；加速比只来自本仓库实测。
+
+- [CPython 3.10 整数 C API](https://docs.python.org/3.10/c-api/long.html)：任意精度、转换及溢出。
+- [CPython 3.12 字典 C API](https://docs.python.org/3.12/c-api/dict.html)：字典直接访问与错误区分。
+- [CPython 3.12 类型 API](https://docs.python.org/3.12/c-api/type.html)及[实现](https://github.com/python/cpython/blob/3.12/Objects/typeobject.c)：PyType_GetDict 所有权和版本差异。
+- [Graal 部分求值](https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/PartialEvaluation/)：稳定程序专门化、守卫与失效。
+- [Bolz/Tratt，The Impact of Meta-Tracing on VM Design and Implementation](https://tratt.net/laurie/research/pubs/html/bolz_tratt__the_impact_of_metatracing_on_vm_design_and_implementation/)：表示方式与跨边界成本。
+- [Ertl/Gregg，PLDI 2003](https://dl.acm.org/doi/10.1145/781131.781162)：VM 分派与 superinstructions；不把旧硬件测量直接套用到本机。
+- [Vmgen 原论文](https://onlinelibrary.wiley.com/doi/10.1002/spe.434)：生成式解释器及与原生编译器的差距。
+- [LLVM ORC 设计](https://llvm.org/docs/ORCv2.html)、[按函数惰性编译](https://llvm.org/docs/tutorial/BuildingAJIT3.html)：链接、代码生命周期和编译时机。
+- [llvmlite 执行引擎](https://llvmlite.readthedocs.io/en/latest/user-guide/binding/execution-engine.html)：真实机器码生成、执行内存检查和引擎生命周期。
+- [Eli Bendersky 的 BF 解释/JIT 实验](https://eli.thegreenplace.net/2017/adventures-in-jit-compilation-part-1-an-interpreter/)：语言字节码与本机编译的可测对照方法。

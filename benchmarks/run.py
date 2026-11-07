@@ -74,7 +74,10 @@ def main():
     args = parser.parse_args()
     if args.repeat < 1:
         parser.error("repeat 必须为正数")
+    if _executor._native is None:
+        parser.error("基准包含 native 路线；请先运行 python setup.py build_ext --inplace")
     report = {"python": sys.version, "platform": platform.platform(), "repeat": args.repeat,
+              "native_compiler": getattr(_executor._native, "compiler", "unknown"),
               "timing": "perf_counter 中位数；冷启动包括 run 内编译，build 和 Runtime 初始化分列",
               "workloads": []}
     builder = pp3.IRBuilder(pp3.std_register)
@@ -88,10 +91,11 @@ def main():
         direct = name in ("深度寻址", "大整数")
         reference_time, expected = execute(pp3.ReferenceRuntime(direct), ir, stdin)
         row = {"name": name, "tokens": len(source.split()), "build_seconds": build_seconds,
+               "memory_cells": len(expected[1]), "output_characters": len(expected[2]),
                "can_direct_addressing": direct, "flat_compile_seconds": flat_compile, "engines": {}}
-        for engine in ("reference", "flat", "auto", "specialized"):
+        for engine in ("reference", "flat", "auto", "specialized", "native"):
             cold, hot, compilation, initial = [], [], [], []
-            compiled, specialized = [], []
+            compiled, specialized, native = [], [], []
             for _ in range(args.repeat):
                 _executor._CACHE.clear()
                 start = perf_counter()
@@ -106,6 +110,7 @@ def main():
                 compilation.append(flat_compile if engine == "flat" else stats.get("compile_seconds", 0))
                 compiled.append(stats.get("compiled_loops", 0))
                 specialized.append(stats.get("specialized_runs", 0))
+                native.append(stats.get("native_runs", 0))
                 runtime.clear()
                 hot_time, actual = execute(runtime, ir, stdin, flat if engine == "flat" else None)
                 if actual != expected:
@@ -125,6 +130,7 @@ def main():
                 "cold_seconds": median(cold), "hot_seconds": median(hot),
                 "compile_seconds": median(compilation), "init_seconds": median(initial),
                 "compiled_loops": median(compiled), "specialized_runs": median(specialized),
+                "native_runs": median(native),
             }
         base = row["engines"]["reference"]["hot_seconds"]
         for data in row["engines"].values():
