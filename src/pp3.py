@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from collections import defaultdict
+import sys
 
 from .handlers import HandlerType, InPlaceHandler
 from .char_io import InputAsChar, PrintAsChar, register as char_register
@@ -35,7 +36,8 @@ class LoopBlock:
         self.body = block_body
 
 
-class Runtime:
+class ReferenceRuntime:
+    """原版参考执行器，用于语义对照；日常运行建议使用 Runtime。"""
 
     def __init__(self,can_direct_addressing=False):
         # memory 默认值为 0，view 是当前工作值
@@ -88,6 +90,34 @@ class Runtime:
         self.view = 0
         self.memory = defaultdict(int)
         self.std_register['input_as_char'].clear()
+
+
+class Runtime(ReferenceRuntime):
+    """保留原接口，自动为热点纯计算循环选择专用执行函数。"""
+
+    def __init__(self, can_direct_addressing=False, *, engine="auto"):
+        if engine not in ("auto", "specialized", "reference"):
+            raise ValueError("engine 必须为 auto、specialized 或 reference")
+        super().__init__(can_direct_addressing)
+        self._engine = engine
+        self._execution_stats = {
+            "compiled_loops": 0, "cache_hits": 0, "specialized_runs": 0,
+            "fallbacks": 0, "compile_seconds": 0.0,
+        }
+
+    @property
+    def execution_stats(self):
+        """返回执行统计的副本，不暴露缓存或改变 DSL 内存。"""
+        return dict(self._execution_stats)
+
+    def run(self, handles):
+        if self._engine == "reference" or type(self) is not Runtime:
+            return ReferenceRuntime.run(self, handles)
+        if sys.gettrace() is not None or sys.getprofile() is not None:
+            return ReferenceRuntime.run(self, handles)
+        if type(handles) is list and len(handles) <= 16 and not any(type(h) is LoopBlock for h in handles):
+            return ReferenceRuntime.run(self, handles)
+        return _execute(self, handles)
 
 
 def Get(place):
@@ -254,3 +284,7 @@ class IRBuilder:
             irs.append(d)
             idx += 1
         return irs
+
+
+# 指令类定义完成后再加载执行器，保持 char_io 先导入时的独立性。
+from ._executor import execute as _execute
