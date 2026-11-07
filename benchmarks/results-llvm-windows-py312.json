@@ -1,0 +1,260 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "repeat": 7,
+  "native_compiler": "Clang 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)",
+  "workloads": [
+    {
+      "name": "P003",
+      "aot_prepare_seconds": 33.33292340009939,
+      "jit_prepare_seconds": 2.662237499956973,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 537088,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.1035737000638619,
+          "hot_seconds": 0.10943690000567585,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.06922259996645153,
+          "hot_seconds": 0.028881199890747666,
+          "speedup": 3.789208911667651
+        },
+        "native": {
+          "cold_seconds": 0.014928100048564374,
+          "hot_seconds": 0.004407100030221045,
+          "speedup": 24.831952815962488
+        },
+        "aot": {
+          "cold_seconds": 0.004042399930767715,
+          "hot_seconds": 0.004320499952882528,
+          "speedup": 25.3296843418925
+        },
+        "jit": {
+          "cold_seconds": 0.0038325999630615115,
+          "hot_seconds": 0.00416459992993623,
+          "speedup": 26.277890276810236
+        }
+      },
+      "memory_cells": 1287,
+      "break_even_runs": 384906.3929793289,
+      "jit_break_even_runs": 10978.294428869067
+    },
+    {
+      "name": "P004",
+      "aot_prepare_seconds": 14.163204599986784,
+      "jit_prepare_seconds": 1.1188223999924958,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 295424,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.10896929993759841,
+          "hot_seconds": 0.12334039993584156,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.04310450004413724,
+          "hot_seconds": 0.017843400011770427,
+          "speedup": 6.912382161162103
+        },
+        "native": {
+          "cold_seconds": 0.017970900051295757,
+          "hot_seconds": 0.008428600034676492,
+          "speedup": 14.633557106565874
+        },
+        "aot": {
+          "cold_seconds": 0.008574699983000755,
+          "hot_seconds": 0.009296700009144843,
+          "speedup": 13.267116268623907
+        },
+        "jit": {
+          "cold_seconds": 0.008297199965454638,
+          "hot_seconds": 0.007991499966010451,
+          "speedup": 15.433948627971533
+        }
+      },
+      "memory_cells": 10936,
+      "break_even_runs": null,
+      "jit_break_even_runs": 2559.648190875288
+    },
+    {
+      "name": "P005",
+      "aot_prepare_seconds": 12.963082200032659,
+      "jit_prepare_seconds": 0.9555311999283731,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 300544,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.1970382999861613,
+          "hot_seconds": 0.13345480000134557,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.025177999981679022,
+          "hot_seconds": 0.013775400002487004,
+          "speedup": 9.68790742753399
+        },
+        "native": {
+          "cold_seconds": 0.008502400014549494,
+          "hot_seconds": 0.004525600001215935,
+          "speedup": 29.48886334750951
+        },
+        "aot": {
+          "cold_seconds": 0.004499400034546852,
+          "hot_seconds": 0.004488100064918399,
+          "speedup": 29.735255023502244
+        },
+        "jit": {
+          "cold_seconds": 0.0043268000008538365,
+          "hot_seconds": 0.004066299996338785,
+          "speedup": 32.8197132827154
+        }
+      },
+      "memory_cells": 3183,
+      "break_even_runs": 345682.7792233998,
+      "jit_break_even_runs": 2080.407554500138
+    },
+    {
+      "name": "P006",
+      "aot_prepare_seconds": 43.964863399975,
+      "jit_prepare_seconds": 3.9044960999162868,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 640512,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.7553685999009758,
+          "hot_seconds": 0.8059329999377951,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.5390141999814659,
+          "hot_seconds": 0.41172780003398657,
+          "speedup": 1.9574412994975525
+        },
+        "native": {
+          "cold_seconds": 0.03819259989541024,
+          "hot_seconds": 0.02440680004656315,
+          "speedup": 33.020838389311216
+        },
+        "aot": {
+          "cold_seconds": 0.025620699976570904,
+          "hot_seconds": 0.024983000010252,
+          "speedup": 32.25925627855234
+        },
+        "jit": {
+          "cold_seconds": 0.02208800008520484,
+          "hot_seconds": 0.02266140002757311,
+          "speedup": 35.56413103149767
+        }
+      },
+      "memory_cells": 463,
+      "break_even_runs": null,
+      "jit_break_even_runs": 2237.020773138062
+    },
+    {
+      "name": "P007",
+      "aot_prepare_seconds": 35.12202140002046,
+      "jit_prepare_seconds": 3.4568918000441045,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 616960,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.7731902999803424,
+          "hot_seconds": 0.7582230999832973,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.2242872000206262,
+          "hot_seconds": 0.19269890000578016,
+          "speedup": 3.9347557249187917
+        },
+        "native": {
+          "cold_seconds": 0.037106000003404915,
+          "hot_seconds": 0.025343099958263338,
+          "speedup": 29.918324957561953
+        },
+        "aot": {
+          "cold_seconds": 0.025833800085820258,
+          "hot_seconds": 0.026700099930167198,
+          "speedup": 28.39776262884381
+        },
+        "jit": {
+          "cold_seconds": 0.024649800034239888,
+          "hot_seconds": 0.02457680006045848,
+          "speedup": 30.851172574056925
+        }
+      },
+      "memory_cells": 848,
+      "break_even_runs": null,
+      "jit_break_even_runs": 4511.1474110158715
+    },
+    {
+      "name": "P008",
+      "aot_prepare_seconds": 46.86600720009301,
+      "jit_prepare_seconds": 3.98371409997344,
+      "llvm_version": [
+        22,
+        1,
+        0
+      ],
+      "reused_artifact": false,
+      "binary_bytes": 700928,
+      "engines": {
+        "reference": {
+          "cold_seconds": 0.3527034999569878,
+          "hot_seconds": 0.438746300060302,
+          "speedup": 1.0
+        },
+        "specialized": {
+          "cold_seconds": 0.372271400061436,
+          "hot_seconds": 0.35662360000424087,
+          "speedup": 1.2302783664768249
+        },
+        "native": {
+          "cold_seconds": 0.052538499934598804,
+          "hot_seconds": 0.02398870000615716,
+          "speedup": 18.28970723497686
+        },
+        "aot": {
+          "cold_seconds": 0.025257800007238984,
+          "hot_seconds": 0.02303429995663464,
+          "speedup": 19.047520475391245
+        },
+        "jit": {
+          "cold_seconds": 0.0212537000188604,
+          "hot_seconds": 0.021587299997918308,
+          "speedup": 20.324278631538494
+        }
+      },
+      "memory_cells": 476,
+      "break_even_runs": 49105.20197849927,
+      "jit_break_even_runs": 1658.9131699449904
+    }
+  ]
+}
